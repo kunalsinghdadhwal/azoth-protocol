@@ -1,5 +1,8 @@
+'use client';
+
 import React from 'react';
 import { Gem } from 'lucide-react';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const NavItem = ({ href, label }: { href: string; label: string }) => {
   return (
@@ -53,21 +56,126 @@ const Navbar: React.FC = () => {
           <NavItem href="#protocols" label="ENCRYPTION_LOGS" />
           <NavItem href="#sigils" label="DAO_GOVERNANCE" />
           
-          {/* Action Button */}
-          <button className="group relative px-6 py-3 overflow-hidden bg-transparent border border-[#00f5ff]/20 hover:border-[#00f5ff]/50 transition-colors duration-300">
-            {/* Background Fill Animation */}
-            <div className="absolute inset-0 w-full h-full bg-[#00f5ff]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
-            
-            {/* Corner Accents */}
-            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#00f5ff] opacity-50 group-hover:opacity-100 transition-opacity"></div>
-            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#00f5ff] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+          {/* RainbowKit Connect Button with Custom Styling */}
+          <ConnectButton.Custom>
+            {({
+              account,
+              chain,
+              openAccountModal,
+              openChainModal,
+              openConnectModal,
+              authenticationStatus,
+              mounted,
+            }) => {
+              const ready = mounted && authenticationStatus !== 'loading';
+              const connected =
+                ready &&
+                account &&
+                chain &&
+                (!authenticationStatus ||
+                  authenticationStatus === 'authenticated');
 
-            {/* Content */}
-            <span className="relative z-10 font-mono text-[10px] font-bold tracking-[0.2em] text-[#00f5ff] group-hover:text-white transition-colors duration-300 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-[#00f5ff] rounded-none group-hover:animate-ping"></span>
-                CONNECT_WALLET
-            </span>
-          </button>
+              return (
+                <div
+                  {...(!ready && {
+                    'aria-hidden': true,
+                    style: {
+                      opacity: 0,
+                      pointerEvents: 'none',
+                      userSelect: 'none',
+                    },
+                  })}
+                >
+                  {(() => {
+                    if (!connected) {
+                      return (
+                        <button 
+                          onClick={openConnectModal} 
+                          className="group relative px-6 py-3 overflow-hidden bg-transparent border border-[#00f5ff]/20 hover:border-[#00f5ff]/50 transition-colors duration-300"
+                        >
+                          {/* Background Fill Animation */}
+                          <div className="absolute inset-0 w-full h-full bg-[#00f5ff]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                          
+                          {/* Corner Accents */}
+                          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#00f5ff] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#00f5ff] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+
+                          {/* Content */}
+                          <span className="relative z-10 font-mono text-[10px] font-bold tracking-[0.2em] text-[#00f5ff] group-hover:text-white transition-colors duration-300 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-[#00f5ff] rounded-none group-hover:animate-ping"></span>
+                            CONNECT_WALLET
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    if (chain.unsupported) {
+                      return (
+                        <button 
+                          onClick={openChainModal} 
+                          className="group relative px-6 py-3 overflow-hidden bg-transparent border border-red-500/20 hover:border-red-500/50 transition-colors duration-300"
+                        >
+                          <div className="absolute inset-0 w-full h-full bg-red-500/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-red-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-red-500 opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                          <span className="relative z-10 font-mono text-[10px] font-bold tracking-[0.2em] text-red-500 group-hover:text-white transition-colors duration-300 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-none animate-pulse"></span>
+                            WRONG_NETWORK
+                          </span>
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={openChainModal}
+                          className="group relative px-4 py-2 overflow-hidden bg-transparent border border-[#e0f2fe]/20 hover:border-[#e0f2fe]/50 transition-colors duration-300"
+                        >
+                          <div className="absolute inset-0 w-full h-full bg-[#e0f2fe]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                          <span className="relative z-10 font-mono text-[9px] tracking-[0.15em] text-[#e0f2fe] group-hover:text-white transition-colors duration-300 flex items-center gap-2">
+                            {chain.hasIcon && (
+                              <div
+                                style={{
+                                  background: chain.iconBackground,
+                                  width: 12,
+                                  height: 12,
+                                  borderRadius: 999,
+                                  overflow: 'hidden',
+                                }}
+                              >
+                                {chain.iconUrl && (
+                                  <img
+                                    alt={chain.name ?? 'Chain icon'}
+                                    src={chain.iconUrl}
+                                    style={{ width: 12, height: 12 }}
+                                  />
+                                )}
+                              </div>
+                            )}
+                            {chain.name}
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={openAccountModal}
+                          className="group relative px-6 py-3 overflow-hidden bg-transparent border border-[#00f5ff]/20 hover:border-[#00f5ff]/50 transition-colors duration-300"
+                        >
+                          <div className="absolute inset-0 w-full h-full bg-[#00f5ff]/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300 ease-out"></div>
+                          <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#00f5ff] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                          <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#00f5ff] opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                          <span className="relative z-10 font-mono text-[10px] font-bold tracking-[0.2em] text-[#00f5ff] group-hover:text-white transition-colors duration-300 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                            {account.displayName}
+                          </span>
+                        </button>
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            }}
+          </ConnectButton.Custom>
         </div>
       </div>
     </nav>

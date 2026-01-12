@@ -1,16 +1,28 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Space_Grotesk, JetBrains_Mono, Cinzel } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 
-const inter = Inter({
-  variable: "--font-inter",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["300", "400", "700"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
+});
+
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["400", "700", "900"],
 });
 
 export const metadata: Metadata = {
-  title: "Azoth DAO | Confidential Governance",
+  title: "Quantum Vault Interface | Cyber-Obsidian DAO",
   description: "Privacy-preserving DAO governance powered by fully homomorphic encryption",
 };
 
@@ -20,8 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0f] text-gray-100`} suppressHydrationWarning>
+    <html lang="en" className="dark scroll-smooth">
+      <body 
+        className={`${spaceGrotesk.variable} ${jetbrainsMono.variable} ${cinzel.variable} font-sans antialiased bg-[#050505] text-[#d4d4d8]`} 
+        suppressHydrationWarning
+      >
         <Providers>{children}</Providers>
       </body>
     </html>
