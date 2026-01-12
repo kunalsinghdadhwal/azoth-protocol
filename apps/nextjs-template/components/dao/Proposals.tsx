@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { useRouter } from "next/navigation";
 import {
   AZOTH_DAO_ADDRESS,
   AZOTH_DAO_ABI,
@@ -36,6 +37,7 @@ const Proposals = () => {
   const { address } = useAccount();
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
+  const router = useRouter();
 
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -571,13 +573,30 @@ const Proposals = () => {
             </p>
           </div>
 
-          <button
-            onClick={handleCreateProposal}
-            disabled={isCreating || !description || !recipient || !amount}
-            className="btn-primary w-full py-3"
-          >
-            {isCreating ? "Creating..." : "Create Proposal"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={() => {
+                const params = new URLSearchParams();
+                if (description) params.set("title", description.slice(0, 100));
+                if (description) params.set("description", description);
+                router.push(`/agent?${params.toString()}`);
+              }}
+              disabled={!description}
+              className="flex-1 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-600 text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21" />
+              </svg>
+              Ask AI for Suggestions
+            </button>
+            <button
+              onClick={handleCreateProposal}
+              disabled={isCreating || !description || !recipient || !amount}
+              className="flex-1 btn-primary py-3"
+            >
+              {isCreating ? "Creating..." : "Create Proposal"}
+            </button>
+          </div>
         </div>
       )}
 
