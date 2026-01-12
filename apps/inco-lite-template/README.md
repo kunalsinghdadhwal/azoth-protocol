@@ -1,66 +1,205 @@
-# **Inco Lite - Hardhat Template**
+# **Azoth DAO - Confidential Governance System**
 
-This repository provides a **complete Hardhat setup** for testing **reencryption, decryption, and ciphertext formation** in smart contracts.
+A fully confidential governance system built on Base Sepolia using Inco's FHE (Fully Homomorphic Encryption) technology. Implements a dual-token architecture that separates economic stake from governance power while maintaining complete privacy.
 
-## **Setup Instructions**
+## 🌟 Key Innovation
 
-Below, we run a local node and a local covalidator (taken from [the Docker Compose file](./docker-compose.yaml)), and run Hardhat tests against it.
+**Separation of Economic Stake and Governance Power**
 
-### **1. Clone the Repository**
-```sh
-git clone <your-repo-url>
-cd into_your_repo
+Unlike traditional DAOs where token holdings determine both economic interest and voting power, Azoth DAO separates these concerns:
+
+- **cUSDC (via Vault Shares)**: Economic stake and treasury participation
+- **cGOV**: Governance power and voting rights
+
+This design prevents:
+- ✅ Free governance (requires ETH payment for cGOV)
+- ✅ Governance farming (cGOV minting costs real value)
+- ✅ Whale domination (voting power independent of economic stake)
+- ✅ Information leakage (all amounts encrypted end-to-end)
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                   AZOTH DAO SYSTEM                       │
+├─────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐         ┌──────────────────┐     │
+│  │  cUSDC Market    │         │  cGOV Token      │     │
+│  │  (Economic)      │         │  (Governance)    │     │
+│  └────────┬─────────┘         └────────┬─────────┘     │
+│           │                             │               │
+│           ▼                             ▼               │
+│  ┌──────────────────┐         ┌──────────────────┐     │
+│  │  Vault (ERC4626) │◄────────┤   DAO Contract   │     │
+│  │  • Inflation prot│         │   • Proposals    │     │
+│  │  • Ragequit      │         │   • Voting       │     │
+│  └──────────────────┘         │   • Execution    │     │
+│                                └──────────────────┘     │
+│  ┌────────────────────────────────────────────────┐    │
+│  │         Inco FHE Layer (Privacy)               │    │
+│  └────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────┘
 ```
 
-### **2. Install Dependencies**
-```sh
+### Smart Contracts
+
+| Contract | Purpose |
+|----------|---------|
+| `CUSDCMarketplace.sol` | Sells cUSDC for ETH (2000 cUSDC per ETH) |
+| `ConfidentialVault.sol` | ERC-4626 vault with inflation attack protection |
+| `ConfidentialGovernanceToken.sol` | Non-transferable (soulbound) governance token |
+| `AzothDAO.sol` | Main governance with confidential voting |
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js v20+
+- pnpm (or npm/yarn)
+- Base Sepolia ETH ([Get from faucet](https://www.coinbase.com/faucets/base-sepolia-faucet))
+- Docker (for local development)
+
+### 1. Install Dependencies
+
+```bash
 pnpm install
 ```
 
-### **3. Run a local node**
+### 2. Configure Environment
 
-The current instructions will run a local node and a local covalidator. If you are using this template against another network, e.g. Base Sepolia, skip this step.
+```bash
+cp .env.example .env
+# Edit .env with your private key (NO 0x prefix!)
+```
 
-```sh
+### 3. Run Local Development (Optional)
+
+```bash
 docker compose up
 ```
 
-### **3. Configure Environment Variables**  
+### 4. Compile Contracts
 
-Fill in your own information in the `.env` file, you can take this as example:
-
-```plaintext
-# This should be a private key funded with native tokens.
-PRIVATE_KEY_ANVIL="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-PRIVATE_KEY_BASE_SEPOLIA=""
-
-# This should be a seed phrase used to test functionalities with different accounts.  
-# You can send funds from the main wallet to this whenever needed.
-SEED_PHRASE="garden cage click scene crystal fat message twice rubber club choice cool"
-
-# This should be an RPC URL provided by a proper provider  
-# that supports the eth_getLogs() and eth_getFilteredLogs() methods.
-LOCAL_CHAIN_RPC_URL="http://localhost:8545"
-BASE_SEPOLIA_RPC_URL="https://base-sepolia-rpc.publicnode.com"
-```
-
-### **4. Compile Smart Contracts**
-```sh
+```bash
 pnpm hardhat compile
 ```
 
-### **5. Run Tests**
-```sh
+### 5. Run Tests
+
+```bash
+# Local anvil node
 pnpm hardhat test --network anvil
-```
 
-Or, if running against another network, e.g. Base Sepolia, run
-
-```sh
+# Base Sepolia testnet
 pnpm hardhat test --network baseSepolia
 ```
 
-## **Features**
-- End-to-end testing of encryption, reencryption  and decryption functionalities.
-- Hardhat-based test framework.
-- Supports reencryption and ciphertext validation.
+### 6. Deploy to Base Sepolia
+
+```bash
+pnpm hardhat ignition deploy ./ignition/modules/AzothDAO.ts --network baseSepolia
+```
+
+## 📋 User Workflow
+
+### Step 1: Acquire cUSDC (Economic Stake)
+```
+User pays ETH → Receives encrypted cUSDC
+Exchange Rate: 1 ETH = 2000 cUSDC
+```
+
+### Step 2: Deposit into Vault
+```
+User deposits cUSDC → Receives encrypted vault shares
+Inflation protection: δ = 3 (1000x precision)
+```
+
+### Step 3: Join DAO
+```
+Requires vault shares → Grants membership eligibility
+```
+
+### Step 4: Mint cGOV (Governance Power)
+```
+User pays ETH → Receives encrypted cGOV
+Default: 0.001 ETH per token
+```
+
+### Step 5-10: Governance
+```
+Create Proposal → Vote (encrypted) → Queue → Execute
+All voting weights and tallies remain encrypted
+```
+
+## 🔐 Privacy Guarantees
+
+**What is Hidden:**
+- All token balances (cUSDC, vault shares, cGOV)
+- Proposal funding amounts
+- Individual votes and vote weights
+- Running vote tallies
+- Who voted and how
+
+**What is Public:**
+- Proposal descriptions
+- Proposal recipients
+- Final outcomes (Pass/Fail)
+- Membership status
+
+## 🛡️ Security Features
+
+### ERC-4626 Inflation Attack Protection
+
+Based on OpenZeppelin's guidance:
+- Virtual offset: δ = 3
+- Virtual shares: 1000
+- Virtual assets: 1
+- Attack cost = 1000× potential gain
+
+### Sybil Resistance
+
+1. **Economic Layer**: ETH payment for cUSDC
+2. **Governance Layer**: ETH payment for cGOV
+3. **Dual protection**: Both required for full participation
+
+## 📦 Deployment Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| cGOV Mint Price | 0.001 ETH | Cost per governance token |
+| Voting Delay | 1 block | Time before voting starts |
+| Voting Period | 50,400 blocks | ~1 week voting window |
+| Timelock | 172,800 seconds | 2-day execution delay |
+| Quorum | 20% (2000 bps) | Minimum participation |
+| Approval | 50% (5000 bps) | Minimum approval ratio |
+
+## 📁 Project Structure
+
+```
+contracts/
+├── CUSDCMarketplace.sol      # Economic stake acquisition
+├── ConfidentialVault.sol     # ERC-4626 vault with FHE
+├── ConfidentialGovernanceToken.sol  # Soulbound governance token
+└── AzothDAO.sol              # Main governance contract
+
+ignition/modules/
+└── AzothDAO.ts               # Deployment script
+
+test/
+└── AzothDAO.test.ts          # Integration tests
+
+utils/
+├── incoHelper.ts             # Inco encryption utilities
+└── wallet.ts                 # Wallet configuration
+```
+
+## 🔗 Resources
+
+- [Inco Documentation](https://docs.inco.org)
+- [OpenZeppelin ERC4626](https://docs.openzeppelin.com/contracts/4.x/erc4626)
+- [OpenZeppelin Governance](https://docs.openzeppelin.com/contracts/4.x/governance)
+- [Base Sepolia Faucet](https://www.coinbase.com/faucets/base-sepolia-faucet)
+
+## License
+
+MIT

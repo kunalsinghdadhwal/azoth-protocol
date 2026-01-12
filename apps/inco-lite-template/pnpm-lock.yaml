@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@inco/lightning':
-        specifier: ^0.7.6
-        version: 0.7.6
+        specifier: ^0.7.7
+        version: 0.7.10
       '@nomicfoundation/hardhat-toolbox':
         specifier: ^5.0.0
         version: 5.0.0(5d99e244ba9990a185fd320000abe280)
@@ -25,8 +25,8 @@ importers:
         version: 17.2.3
     devDependencies:
       '@inco/js':
-        specifier: ^0.7.6
-        version: 0.7.6(typescript@5.9.3)
+        specifier: ^0.7.7
+        version: 0.7.10(typescript@5.9.3)
       '@nomicfoundation/hardhat-ignition':
         specifier: ^0.15.0
         version: 0.15.16(@nomicfoundation/hardhat-verify@2.1.3(hardhat@2.28.2(ts-node@10.9.2(@types/node@25.0.3)(typescript@5.9.3))(typescript@5.9.3)))(hardhat@2.28.2(ts-node@10.9.2(@types/node@25.0.3)(typescript@5.9.3))(typescript@5.9.3))
@@ -392,11 +392,11 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  '@inco/js@0.7.6':
-    resolution: {integrity: sha512-TH8dZv/Q68h0lEh1dDPpGGdVld8yJQeKwdilpjVjKqkvysgu+CNZvDjnJQE0VGB1CWxjXpaaMfkXIdKHrx+/7A==}
+  '@inco/js@0.7.10':
+    resolution: {integrity: sha512-KoJpea2HGcwE/C5E+XvePsv8Mpg/oU03mehKpw730jwrsf+L1aXpiJQgEA9ylK3o/s3FZD0Q3rY6L/uqOBSquQ==}
 
-  '@inco/lightning@0.7.6':
-    resolution: {integrity: sha512-6ZrjLmZf8zIhs9rNG7ZDmA7gviR0zUM5dJJEOkiPu2qPj8rUqE8fReG1SVVai3Rcdm8mvottVpWaqDcAG1zJwQ==}
+  '@inco/lightning@0.7.10':
+    resolution: {integrity: sha512-+kGqnuOK+19CWp2ytdWBHFt709gwh6PXc3AbcVF4WsqnLqLA7kSeuPbSrLrx9d5DyRcEQC0YwxjD2pnj2P1Yyw==}
 
   '@inco/shared@0.1.0':
     resolution: {integrity: sha512-Yw4KnTCGJPMGlWFq1JEpuadoNYFEXA+TObwNsR2Tq9ICgf0iVksSYatqiUeHaB1/J9Vyo5obZOKsU92Oieacog==}
@@ -677,8 +677,8 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
-  '@safe-global/safe-smart-account@git+https://git@github.com:safe-global/safe-smart-account.git#dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be':
-    resolution: {commit: dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be, repo: git@github.com:safe-global/safe-smart-account.git, type: git}
+  '@safe-global/safe-smart-account@git+https://github.com/safe-global/safe-smart-account.git#dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be':
+    resolution: {commit: dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be, repo: https://github.com/safe-global/safe-smart-account.git, type: git}
     version: 1.5.0
 
   '@scure/base@1.1.9':
@@ -1423,8 +1423,8 @@ packages:
     resolution: {integrity: sha512-dKx12eRCVIzqCxFGplyFKJMPvLEWgmNtUrpTiJIR5u97zEhRG8ySrtboPHZXx7daLxQVrl643cTzbab2tkQjxg==}
     engines: {node: '>= 0.4'}
 
-  forge-std@https://codeload.github.com/foundry-rs/forge-std/tar.gz/e3386f2f9cc5ebf16ec5370869d5a49cdb85a0cb:
-    resolution: {tarball: https://codeload.github.com/foundry-rs/forge-std/tar.gz/e3386f2f9cc5ebf16ec5370869d5a49cdb85a0cb}
+  forge-std@https://codeload.github.com/foundry-rs/forge-std/tar.gz/0c9da5736d06b0f01fac287c23d30a00d444e872:
+    resolution: {tarball: https://codeload.github.com/foundry-rs/forge-std/tar.gz/0c9da5736d06b0f01fac287c23d30a00d444e872}
     version: 1.14.0
 
   form-data@2.5.5:
@@ -2997,7 +2997,7 @@ snapshots:
       protobufjs: 7.5.4
       yargs: 17.7.2
 
-  '@inco/js@0.7.6(typescript@5.9.3)':
+  '@inco/js@0.7.10(typescript@5.9.3)':
     dependencies:
       '@bufbuild/protobuf': 2.10.2
       '@connectrpc/connect': 2.1.1(@bufbuild/protobuf@2.10.2)
@@ -3016,21 +3016,21 @@ snapshots:
       - utf-8-validate
       - zod
 
-  '@inco/lightning@0.7.6':
+  '@inco/lightning@0.7.10':
     dependencies:
       '@inco/shared': 0.1.0
       '@openzeppelin/contracts': 5.4.0
       '@openzeppelin/contracts-upgradeable': 5.4.0(@openzeppelin/contracts@5.4.0)
-      '@safe-global/safe-smart-account': git+https://git@github.com:safe-global/safe-smart-account.git#dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be
+      '@safe-global/safe-smart-account': git+https://github.com/safe-global/safe-smart-account.git#dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
-      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/e3386f2f9cc5ebf16ec5370869d5a49cdb85a0cb
+      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/0c9da5736d06b0f01fac287c23d30a00d444e872
       tsx: 4.21.0
 
   '@inco/shared@0.1.0':
     dependencies:
       '@openzeppelin/contracts': 5.4.0
       ds-test: https://codeload.github.com/dapphub/ds-test/tar.gz/e282159d5170298eb2455a6c05280ab5a73a4ef0
-      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/e3386f2f9cc5ebf16ec5370869d5a49cdb85a0cb
+      forge-std: https://codeload.github.com/foundry-rs/forge-std/tar.gz/0c9da5736d06b0f01fac287c23d30a00d444e872
 
   '@isaacs/balanced-match@4.0.1': {}
 
@@ -3315,7 +3315,7 @@ snapshots:
 
   '@protobufjs/utf8@1.1.0': {}
 
-  '@safe-global/safe-smart-account@git+https://git@github.com:safe-global/safe-smart-account.git#dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be': {}
+  '@safe-global/safe-smart-account@git+https://github.com/safe-global/safe-smart-account.git#dc437e8fba8b4805d76bcbd1c668c9fd3d1e83be': {}
 
   '@scure/base@1.1.9': {}
 
@@ -4180,7 +4180,7 @@ snapshots:
     dependencies:
       is-callable: 1.2.7
 
-  forge-std@https://codeload.github.com/foundry-rs/forge-std/tar.gz/e3386f2f9cc5ebf16ec5370869d5a49cdb85a0cb: {}
+  forge-std@https://codeload.github.com/foundry-rs/forge-std/tar.gz/0c9da5736d06b0f01fac287c23d30a00d444e872: {}
 
   form-data@2.5.5:
     dependencies:

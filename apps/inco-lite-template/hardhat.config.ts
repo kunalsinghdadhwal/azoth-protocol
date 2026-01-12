@@ -4,10 +4,12 @@ import * as dotenv from "dotenv";
 
 dotenv.config(); // Load environment variables
 
-const PRIVATE_KEY = process.env.PRIVATE_KEY_BASE_SEPOLIA || "";
+// Support both naming conventions for private key
+const PRIVATE_KEY = process.env.PRIVATE_KEY || process.env.PRIVATE_KEY_BASE_SEPOLIA || "";
 const PRIVATE_KEY_ANVIL = process.env.PRIVATE_KEY_ANVIL || "";
 
-const BASE_SEPOLIA_RPC_URL = process.env.BASE_SEPOLIA_RPC_URL || "";
+// Base Sepolia RPC - use public RPC if not configured
+const BASE_SEPOLIA_RPC_URL = process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -27,11 +29,12 @@ const config: HardhatUserConfig = {
     anvil: {
       url: "http://localhost:8545",
       accounts: PRIVATE_KEY_ANVIL ? [PRIVATE_KEY_ANVIL] : [],
-      chainId:31337
+      chainId: 31337
     },
     baseSepolia: {
       url: BASE_SEPOLIA_RPC_URL,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
+      chainId: 84532
     }
   }
 };
