@@ -1,0 +1,4 @@
+@inco/lightning/=../../node_modules/@inco/lightning/
+@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/
+@openzeppelin/contracts-upgradeable/=../../node_modules/@openzeppelin/contracts-upgradeable/
+forge-std/=lib/forge-std/src/
