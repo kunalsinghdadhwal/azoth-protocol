@@ -17,6 +17,7 @@
     "@types/node": "^22.19.3"
   },
   "dependencies": {
+    "@nillion/nilai-ts": "^0.2.0",
     "express": "^5.2.1"
   }
 }
