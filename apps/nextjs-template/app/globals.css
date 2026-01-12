@@ -353,8 +353,101 @@ body {
 }
 
 .bg-grid-pattern {
-  background-image: 
+  background-image:
     linear-gradient(to right, #1f2937 1px, transparent 1px),
     linear-gradient(to bottom, #1f2937 1px, transparent 1px);
   background-size: 40px 40px;
+}
+
+/* ========== Wood Table Theme for UNO ========== */
+:root {
+  --wood-light: #d4a574;
+  --wood-medium: #b8875a;
+  --wood-dark: #8b6542;
+  --wood-grain: #a67c52;
+}
+
+.bg-wood-table {
+  background-image: url('/textures/wood-table.jpg');
+  background-size: cover;
+  background-position: center;
+  background-color: var(--wood-light);
+  /* Fallback CSS wood grain pattern if image fails */
+  background-image:
+    url('/textures/wood-table.jpg'),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 50px,
+      rgba(139, 101, 66, 0.08) 50px,
+      rgba(139, 101, 66, 0.08) 51px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(139, 101, 66, 0.03) 0px,
+      transparent 2px,
+      transparent 10px
+    );
+}
+
+.bg-wood-panel {
+  background-color: rgba(184, 135, 90, 0.95);
+  border: 2px solid var(--wood-dark);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.bg-wood-dark {
+  background-color: rgba(139, 101, 66, 0.95);
+  border: 2px solid #6b4423;
+}
+
+.btn-wood {
+  background-color: #c9722a;
+  color: white;
+  font-weight: 600;
+  border: 2px solid #a65b1f;
+  border-radius: 8px;
+  padding: 8px 16px;
+  transition: transform 0.15s ease-out;
+}
+
+.btn-wood:hover {
+  background-color: #d4803a;
+  transform: translateY(-1px);
+}
+
+.btn-wood:active {
+  transform: translateY(0);
+}
+
+.btn-wood:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Card back pattern for UNO */
+.uno-card-back {
+  background: radial-gradient(ellipse 80% 60% at center, transparent 40%, rgba(255, 255, 255, 0.2) 41%, rgba(255, 255, 255, 0.2) 45%, transparent 46%);
+}
+
+/* Wood scrollbar for UNO page */
+.scrollbar-wood::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.scrollbar-wood::-webkit-scrollbar-track {
+  background: var(--wood-dark);
+  border-radius: 4px;
+}
+
+.scrollbar-wood::-webkit-scrollbar-thumb {
+  background: var(--wood-medium);
+  border-radius: 4px;
+  border: 1px solid var(--wood-dark);
+}
+
+.scrollbar-wood::-webkit-scrollbar-thumb:hover {
+  background: var(--wood-light);
 }

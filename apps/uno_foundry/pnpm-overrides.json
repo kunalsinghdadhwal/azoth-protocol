@@ -1,0 +1,5 @@
+{
+  "overrides": {
+    "@inco/lightning": "0.7.10"
+  }
+}
