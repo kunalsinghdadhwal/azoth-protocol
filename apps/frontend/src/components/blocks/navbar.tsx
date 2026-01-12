@@ -38,6 +38,7 @@ const ITEMS = [
       },
     ],
   },
+  { label: "DAO Agent", href: "/agent" },
   { label: "Docs", href: "/docs" },
   { label: "Fees", href: "/pricing" },
   { label: "Contact", href: "/contact" },

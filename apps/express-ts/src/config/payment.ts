@@ -6,7 +6,7 @@
 
 export const PAYMENT_CONFIG = {
   // Network: Base Sepolia testnet (CAIP-2 format)
-  network: 'eip155:84532',
+  network: 'eip155:84532' as const,
 
   // x402 facilitator for testnet
   facilitatorUrl: 'https://x402.org/facilitator',
