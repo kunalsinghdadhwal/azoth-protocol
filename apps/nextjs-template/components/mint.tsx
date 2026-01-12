@@ -26,6 +26,7 @@ const Mint = ({
     });
 
     if (receipt.status !== "success") {
+      console.error("Transaction failed: ", receipt);
       throw new Error("Transaction failed");
     }
 
