@@ -11,6 +11,17 @@ interface ICUSDCMarketplace {
     function vaultWithdraw(address to, euint256 amount) external returns (euint256);
 }
 
+// Interface for DAO to auto-leave on ragequit
+interface IAzothDAOForVault {
+    function isMember(address account) external view returns (bool);
+    function leaveDAO() external;
+}
+
+// Interface for cGOV to auto-burn on ragequit
+interface IConfidentialGovernanceTokenForVault {
+    function burnAllFor(address user) external;
+}
+
 /**
  * @title ConfidentialVault
  * @notice ERC-4626 inspired confidential vault for cUSDC with virtual offset protection
@@ -20,7 +31,7 @@ interface ICUSDCMarketplace {
  * - Virtual offset (δ = 3) provides 1000x share precision vs assets
  * - Virtual shares (1000) and virtual assets (1) prevent inflation attacks
  * - All amounts encrypted using Inco FHE
- * - Ragequit functionality for member exits
+ * - Ragequit functionality for member exits (auto-leaves DAO)
  * 
  * Based on OpenZeppelin's ERC4626 guidance for inflation attack protection
  */
@@ -52,6 +63,7 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
     event Withdraw(address indexed receiver, uint256 timestamp);
     event VaultInitialized(uint256 virtualShares, uint256 virtualAssets);
     event DAOSet(address indexed dao);
+    event CGOVSet(address indexed cGOV);
 
     // ============ State Variables ============
     
@@ -68,6 +80,9 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
 
     // Authorized DAO contract
     address public authorizedDAO;
+    
+    // Authorized cGOV contract (for burning on ragequit)
+    address public authorizedCGOV;
 
     // ============ Constructor ============
     
@@ -100,7 +115,7 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
     /**
      * @notice Deposit cUSDC and receive vault shares
      * @dev Uses the inflation-protected share calculation formula
-     * @param assets Encrypted amount of cUSDC to deposit
+     * User's full cUSDC balance is deposited automatically
      * @return sharesReceived Encrypted shares minted
      * 
      * Formula (with virtual offset protection):
@@ -109,12 +124,11 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
      * The DECIMAL_OFFSET multiplier ensures precision is maintained
      * Virtual shares/assets prevent manipulation by attackers
      */
-    function deposit(euint256 assets) external nonReentrant returns (euint256 sharesReceived) {
-        // Verify caller has access to the assets handle
-        if (!e.isAllowed(msg.sender, assets)) revert UnauthorizedAccess();
-        
-        // Transfer assets from user to vault via marketplace
-        euint256 actualAssets = cUSDC.vaultTransfer(msg.sender, assets);
+    function deposit() external nonReentrant returns (euint256 sharesReceived) {
+        // Transfer user's full cUSDC balance from marketplace to vault
+        // The marketplace uses stored balance, avoiding ACL issues with passed handles
+        euint256 dummyHandle = uint256(0).asEuint256(); // Not used, marketplace reads stored balance
+        euint256 actualAssets = cUSDC.vaultTransfer(msg.sender, dummyHandle);
         
         // Calculate shares to mint using the formula:
         // shares = (assets × 10^δ × totalShares) / totalAssets
@@ -123,28 +137,32 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
         euint256 numerator = assetsScaled.mul(_totalShares);
         sharesReceived = numerator.div(_totalAssets);
         
-        // Update vault state
-        _totalAssets = _totalAssets.add(actualAssets);
-        _totalShares = _totalShares.add(sharesReceived);
+        // Update vault state - use local variable pattern
+        euint256 newTotalAssets = _totalAssets.add(actualAssets);
+        euint256 newTotalShares = _totalShares.add(sharesReceived);
+        _totalAssets = newTotalAssets;
+        _totalShares = newTotalShares;
         
-        // Update user shares
+        // Update user shares - use local variable pattern
+        euint256 newUserShares;
         if (euint256.unwrap(shares[msg.sender]) == bytes32(0)) {
-            shares[msg.sender] = sharesReceived;
+            newUserShares = sharesReceived;
         } else {
-            shares[msg.sender] = shares[msg.sender].add(sharesReceived);
+            newUserShares = shares[msg.sender].add(sharesReceived);
         }
+        shares[msg.sender] = newUserShares;
         
-        // Set permissions
-        _totalAssets.allowThis();
-        _totalShares.allowThis();
-        shares[msg.sender].allowThis();
-        shares[msg.sender].allow(msg.sender);
+        // Set permissions - use local variables
+        newTotalAssets.allowThis();
+        newTotalShares.allowThis();
+        newUserShares.allowThis();
+        newUserShares.allow(msg.sender);
         sharesReceived.allowThis();
         sharesReceived.allow(msg.sender);
 
         // Allow DAO to check balances
         if (authorizedDAO != address(0)) {
-            shares[msg.sender].allow(authorizedDAO);
+            newUserShares.allow(authorizedDAO);
         }
         
         emit Deposit(msg.sender, block.timestamp);
@@ -179,23 +197,30 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
         assetsWithdrawn = hasSufficientShares.select(assetsToReturn, uint256(0).asEuint256());
         euint256 sharesBurned = hasSufficientShares.select(sharesToBurn, uint256(0).asEuint256());
         
-        // Update user shares
-        shares[msg.sender] = userShares.sub(sharesBurned);
+        // CRITICAL: Grant marketplace ACL access BEFORE calling vaultWithdraw
+        // The marketplace needs to compare this amount with vault balance
+        assetsWithdrawn.allowThis();
+        assetsWithdrawn.allow(address(cUSDC));
+        assetsWithdrawn.allow(msg.sender);
         
-        // Update vault state
-        _totalShares = _totalShares.sub(sharesBurned);
-        _totalAssets = _totalAssets.sub(assetsWithdrawn);
+        // Update user shares - use local variable pattern
+        euint256 newUserShares = userShares.sub(sharesBurned);
+        shares[msg.sender] = newUserShares;
+        
+        // Update vault state - use local variable pattern
+        euint256 newTotalShares = _totalShares.sub(sharesBurned);
+        euint256 newTotalAssets = _totalAssets.sub(assetsWithdrawn);
+        _totalShares = newTotalShares;
+        _totalAssets = newTotalAssets;
         
         // Transfer assets from vault to user
         cUSDC.vaultWithdraw(msg.sender, assetsWithdrawn);
         
-        // Set permissions
-        _totalAssets.allowThis();
-        _totalShares.allowThis();
-        shares[msg.sender].allowThis();
-        shares[msg.sender].allow(msg.sender);
-        assetsWithdrawn.allowThis();
-        assetsWithdrawn.allow(msg.sender);
+        // Set permissions - use local variables
+        newTotalAssets.allowThis();
+        newTotalShares.allowThis();
+        newUserShares.allowThis();
+        newUserShares.allow(msg.sender);
         
         emit Withdraw(msg.sender, block.timestamp);
         
@@ -210,6 +235,11 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
         address recipient,
         euint256 amount
     ) external onlyAuthorizedDAO returns (euint256) {
+        // CRITICAL: Grant marketplace ACL access to the amount handle
+        // The marketplace needs to compare this amount with vault balance
+        amount.allow(address(cUSDC));
+        amount.allow(recipient);
+        
         return cUSDC.vaultWithdraw(recipient, amount);
     }
     
@@ -287,6 +317,107 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
         return (OFFSET, VIRTUAL_SHARES, VIRTUAL_ASSETS);
     }
 
+    // ============ Debug Functions ============
+
+    /**
+     * @notice Withdraw ALL shares - simplified ragequit
+     * @dev Uses the user's stored shares directly, no ACL check needed on input
+     * Also auto-leaves DAO and burns all cGOV tokens (full exit)
+     * @return assetsWithdrawn Encrypted cUSDC received
+     */
+    function withdrawAll() external nonReentrant returns (euint256 assetsWithdrawn) {
+        euint256 userShares = shares[msg.sender];
+        
+        // Check user has shares
+        if (euint256.unwrap(userShares) == bytes32(0)) {
+            revert UnauthorizedAccess(); // No shares to withdraw
+        }
+        
+        // Calculate assets to return:
+        // assets = (userShares × totalAssets) / (totalShares × 10^δ)
+        euint256 numerator = userShares.mul(_totalAssets);
+        euint256 denominatorScaled = _totalShares.mul(DECIMAL_OFFSET.asEuint256());
+        assetsWithdrawn = numerator.div(denominatorScaled);
+        
+        // CRITICAL: Grant marketplace ACL access BEFORE calling vaultWithdraw
+        // The marketplace needs to compare this amount with vault balance
+        assetsWithdrawn.allowThis();
+        assetsWithdrawn.allow(address(cUSDC));
+        assetsWithdrawn.allow(msg.sender);
+        
+        // IMPORTANT: Reset shares entry to zero bytes32 (not encrypted zero)
+        // This allows hasShares() to return false and enables re-deposit
+        shares[msg.sender] = euint256.wrap(bytes32(0));
+        
+        // Update vault state
+        euint256 newTotalShares = _totalShares.sub(userShares);
+        euint256 newTotalAssets = _totalAssets.sub(assetsWithdrawn);
+        _totalShares = newTotalShares;
+        _totalAssets = newTotalAssets;
+        
+        // Transfer assets from vault to user
+        cUSDC.vaultWithdraw(msg.sender, assetsWithdrawn);
+        
+        // Set permissions
+        newTotalAssets.allowThis();
+        newTotalShares.allowThis();
+        
+        // Auto-burn cGOV tokens (ragequit = full exit from governance)
+        if (authorizedCGOV != address(0)) {
+            try IConfidentialGovernanceTokenForVault(authorizedCGOV).burnAllFor(msg.sender) {
+                // Successfully burned cGOV
+            } catch {
+                // cGOV burn failed, user can burn manually
+            }
+        }
+        
+        // Auto-leave DAO if user is a member (ragequit = full exit)
+        if (authorizedDAO != address(0)) {
+            try IAzothDAOForVault(authorizedDAO).isMember(msg.sender) returns (bool isMember) {
+                if (isMember) {
+                    // Use low-level call to avoid revert if leaveDAO fails
+                    // The vault calls leaveDAO on behalf of the user
+                    (bool success, ) = authorizedDAO.call(
+                        abi.encodeWithSignature("leaveDAOFor(address)", msg.sender)
+                    );
+                    // If leaveDAOFor doesn't exist, that's ok - user can leave manually
+                    if (!success) {
+                        // Fallback: emit event so user knows to leave manually
+                    }
+                }
+            } catch {
+                // DAO not accessible, user can leave manually
+            }
+        }
+        
+        emit Withdraw(msg.sender, block.timestamp);
+        
+        return assetsWithdrawn;
+    }
+
+    /**
+     * @notice Check if a user is allowed to access their own shares
+     * @dev For debugging ACL issues
+     * @param user Address to check
+     * @return Whether the user can access their shares handle
+     */
+    function checkSharesACL(address user) external view returns (bool) {
+        euint256 userShares = shares[user];
+        if (euint256.unwrap(userShares) == bytes32(0)) {
+            return false; // No shares exist
+        }
+        return e.isAllowed(user, userShares);
+    }
+
+    /**
+     * @notice Get raw shares handle for debugging
+     * @param user Address to query
+     * @return The raw bytes32 handle
+     */
+    function getSharesHandle(address user) external view returns (bytes32) {
+        return euint256.unwrap(shares[user]);
+    }
+
     // ============ Admin Functions ============
 
     /**
@@ -297,5 +428,14 @@ contract ConfidentialVault is Ownable, ReentrancyGuard {
         if (dao == address(0)) revert InvalidDAO();
         authorizedDAO = dao;
         emit DAOSet(dao);
+    }
+
+    /**
+     * @notice Set the authorized cGOV contract
+     * @param _cGOV Address of the ConfidentialGovernanceToken contract
+     */
+    function setAuthorizedCGOV(address _cGOV) external onlyOwner {
+        authorizedCGOV = _cGOV;
+        emit CGOVSet(_cGOV);
     }
 }

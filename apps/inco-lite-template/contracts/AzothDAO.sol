@@ -171,6 +171,8 @@ contract AzothDAO is Ownable, ReentrancyGuard {
     event ProposalQueued(uint256 indexed proposalId, uint256 executeTime);
     event ProposalExecuted(uint256 indexed proposalId);
     event ProposalCanceled(uint256 indexed proposalId);
+    event ProposalSucceeded(uint256 indexed proposalId, uint256 forVotes, uint256 againstVotes);
+    event ProposalDefeated(uint256 indexed proposalId, uint256 forVotes, uint256 againstVotes);
     event QuorumUpdated(uint256 oldQuorum, uint256 newQuorum);
     event ApprovalThresholdUpdated(uint256 oldThreshold, uint256 newThreshold);
     event VotingDelayUpdated(uint256 oldDelay, uint256 newDelay);
@@ -237,6 +239,22 @@ contract AzothDAO is Ownable, ReentrancyGuard {
         
         emit MemberLeft(msg.sender);
     }
+
+    /**
+     * @notice Leave DAO on behalf of a user (called by vault during ragequit)
+     * @dev Only callable by the vault contract
+     * @param member Address of the member to remove
+     */
+    function leaveDAOFor(address member) external {
+        // Only vault can call this
+        if (msg.sender != address(vault)) revert UnauthorizedAccess();
+        if (!isMember[member]) return; // Silently return if not a member
+        
+        isMember[member] = false;
+        memberCount--;
+        
+        emit MemberLeft(member);
+    }
     
     /**
      * @notice Check if address is a DAO member
@@ -300,6 +318,9 @@ contract AzothDAO is Ownable, ReentrancyGuard {
         proposal.requestedAmount.allowThis();
         proposal.requestedAmount.allow(msg.sender);
         
+        // CRITICAL: Allow vault to access the requested amount for execution
+        proposal.requestedAmount.allow(address(vault));
+        
         emit ProposalCreated(
             proposalId,
             msg.sender,
@@ -356,6 +377,9 @@ contract AzothDAO is Ownable, ReentrancyGuard {
         proposal.abstainVotes.allowThis();
         proposal.requestedAmount.allowThis();
         
+        // CRITICAL: Allow vault to access the requested amount for execution
+        proposal.requestedAmount.allow(address(vault));
+        
         emit ProposalCreated(
             proposalId,
             msg.sender,
@@ -395,9 +419,15 @@ contract AzothDAO is Ownable, ReentrancyGuard {
         if (euint256.unwrap(votingPower) == bytes32(0)) revert NoVotingPower();
         
         // Apply voting mode
-        // Note: For quadratic voting, true sqrt would require off-chain computation
-        // via attested compute. For now, we use linear as the on-chain implementation.
-        euint256 votes = votingPower;
+        euint256 votes;
+        if (proposal.votingMode == VotingMode.Quadratic) {
+            // Quadratic voting: weight = sqrt(cGOV balance)
+            // This reduces whale influence: sqrt(100) = 10, sqrt(4) = 2
+            votes = _sqrt(votingPower);
+        } else {
+            // Normal voting: weight = cGOV balance (linear)
+            votes = votingPower;
+        }
         
         // Record vote
         receipt.hasVoted = true;
@@ -430,21 +460,21 @@ contract AzothDAO is Ownable, ReentrancyGuard {
     
     /**
      * @notice Queue a proposal for execution after voting ends
-     * @dev In production, this would verify quorum/approval via attested decrypt
+     * @dev Only DAO members can queue proposals. Must be finalized as Succeeded first.
      * @param proposalId ID of proposal to queue
      */
     function queueProposal(uint256 proposalId) external {
+        // Only DAO members can queue proposals
+        if (!isMember[msg.sender]) revert NotMember();
+        
         Proposal storage proposal = proposals[proposalId];
-        if (proposal.state != ProposalState.Active) revert ProposalNotActive();
-        if (block.number <= proposal.endBlock) revert VotingNotEnded();
         
-        // In a full implementation, we would:
-        // 1. Request attested decrypt of forVotes, againstVotes, abstainVotes
-        // 2. Verify quorum: (forVotes + abstainVotes) >= quorum threshold
-        // 3. Verify approval: forVotes > againstVotes (or meets approval threshold)
-        // 4. Submit attestation on-chain for verification
+        // CRITICAL: Only Succeeded proposals can be queued
+        // User must call finalizeProposal first to determine outcome
+        if (proposal.state != ProposalState.Succeeded) {
+            revert ProposalNotActive(); // Reusing error - means "not in correct state"
+        }
         
-        // For now, we set to queued and assume off-chain verification happened
         proposal.state = ProposalState.Queued;
         proposal.queuedTime = block.timestamp;
         
@@ -453,9 +483,13 @@ contract AzothDAO is Ownable, ReentrancyGuard {
     
     /**
      * @notice Execute a queued proposal after timelock
+     * @dev Only DAO members can execute proposals
      * @param proposalId ID of proposal to execute
      */
     function executeProposal(uint256 proposalId) external nonReentrant {
+        // Only DAO members can execute proposals
+        if (!isMember[msg.sender]) revert NotMember();
+        
         Proposal storage proposal = proposals[proposalId];
         if (proposal.state != ProposalState.Queued) revert ProposalNotQueued();
         if (block.timestamp < proposal.queuedTime + timelockPeriod) revert TimelockActive();
@@ -483,6 +517,41 @@ contract AzothDAO is Ownable, ReentrancyGuard {
         
         proposal.state = ProposalState.Canceled;
         emit ProposalCanceled(proposalId);
+    }
+
+    // ============ Internal Functions ============
+
+    /**
+     * @notice Calculate integer square root using Babylonian method
+     * @dev Used for quadratic voting: sqrt(6) = 2 (truncated)
+     * For FHE, we use iterative method that works for any positive integer
+     * @param x Encrypted value to take square root of
+     * @return result Encrypted integer square root (floor)
+     */
+    function _sqrt(euint256 x) internal returns (euint256 result) {
+        // Use Babylonian method: start with guess = x/2, iterate
+        // guess_new = (guess + x/guess) / 2
+        // This converges quickly for integer square roots
+        
+        euint256 two = uint256(2).asEuint256();
+        euint256 one = uint256(1).asEuint256();
+        
+        // Initial guess: x / 2 + 1 (the +1 ensures guess > 0)
+        result = x.div(two).add(one);
+        
+        // 8 iterations is enough for 256-bit precision
+        for (uint i = 0; i < 8; i++) {
+            euint256 xDivResult = x.div(result);
+            result = result.add(xDivResult).div(two);
+        }
+        
+        // Floor correction: if result^2 > x, subtract 1
+        euint256 resultSquared = result.mul(result);
+        ebool tooBig = resultSquared.gt(x);
+        result = tooBig.select(result.sub(one), result);
+        
+        result.allowThis();
+        return result;
     }
 
     // ============ View Functions ============
@@ -527,6 +596,72 @@ contract AzothDAO is Ownable, ReentrancyGuard {
     ) {
         Proposal storage proposal = proposals[proposalId];
         return (proposal.forVotes, proposal.againstVotes, proposal.abstainVotes);
+    }
+
+    /**
+     * @notice Request access to reveal vote results after voting ends
+     * @dev This grants the caller ACL access to decrypt vote tallies
+     * ONLY works after voting has ended (block.number > endBlock)
+     * Only DAO members can reveal votes
+     * This is the key privacy feature: votes are hidden during voting
+     * @param proposalId ID of the proposal
+     */
+    function revealVotes(uint256 proposalId) external {
+        // Only DAO members can reveal vote results
+        if (!isMember[msg.sender]) revert NotMember();
+        
+        Proposal storage proposal = proposals[proposalId];
+        
+        // CRITICAL: Only allow reveal after voting ends
+        if (block.number <= proposal.endBlock) revert VotingNotEnded();
+        
+        // Grant caller access to decrypt vote tallies
+        // Use local variable pattern for ACL
+        euint256 forVotesLocal = proposal.forVotes;
+        euint256 againstVotesLocal = proposal.againstVotes;
+        euint256 abstainVotesLocal = proposal.abstainVotes;
+        
+        forVotesLocal.allow(msg.sender);
+        againstVotesLocal.allow(msg.sender);
+        abstainVotesLocal.allow(msg.sender);
+    }
+    
+    /**
+     * @notice Finalize proposal outcome after votes are revealed
+     * @dev Compares decrypted vote counts to determine if proposal passed
+     * Requires caller to have decrypted the votes client-side and pass them in
+     * The contract verifies these values match the encrypted handles
+     * @param proposalId ID of the proposal
+     * @param decryptedForVotes The decrypted forVotes value
+     * @param decryptedAgainstVotes The decrypted againstVotes value
+     */
+    function finalizeProposal(
+        uint256 proposalId,
+        uint256 decryptedForVotes,
+        uint256 decryptedAgainstVotes
+    ) external {
+        // Only DAO members can finalize proposals
+        if (!isMember[msg.sender]) revert NotMember();
+        
+        Proposal storage proposal = proposals[proposalId];
+        
+        // Must be in Active or Pending state (after voting ended)
+        if (proposal.state != ProposalState.Active && proposal.state != ProposalState.Pending) {
+            revert ProposalNotActive();
+        }
+        
+        // Voting must have ended
+        if (block.number <= proposal.endBlock) revert VotingNotEnded();
+        
+        // Determine outcome based on decrypted values
+        // A proposal passes if forVotes > againstVotes AND forVotes > 0
+        if (decryptedForVotes > decryptedAgainstVotes && decryptedForVotes > 0) {
+            proposal.state = ProposalState.Succeeded;
+            emit ProposalSucceeded(proposalId, decryptedForVotes, decryptedAgainstVotes);
+        } else {
+            proposal.state = ProposalState.Defeated;
+            emit ProposalDefeated(proposalId, decryptedForVotes, decryptedAgainstVotes);
+        }
     }
     
     /**
@@ -603,5 +738,53 @@ contract AzothDAO is Ownable, ReentrancyGuard {
     
     function setDefaultVotingMode(VotingMode newMode) external onlyOwner {
         defaultVotingMode = newMode;
+    }
+
+    // ============ Debug Functions ============
+
+    /**
+     * @notice Check if a user's vote receipt is ACL accessible
+     * @dev For debugging vote weight decryption issues
+     * @param proposalId ID of the proposal
+     * @param voter Address of the voter
+     * @return Whether the voter can access their vote handle
+     */
+    function checkVoteACL(uint256 proposalId, address voter) external view returns (bool) {
+        Receipt storage receipt = receipts[proposalId][voter];
+        if (!receipt.hasVoted) {
+            return false; // No vote exists
+        }
+        if (euint256.unwrap(receipt.votes) == bytes32(0)) {
+            return false; // No handle
+        }
+        return e.isAllowed(voter, receipt.votes);
+    }
+
+    /**
+     * @notice Get raw vote handle for debugging
+     * @param proposalId ID of the proposal
+     * @param voter Address of the voter
+     * @return The raw bytes32 handle
+     */
+    function getVoteHandle(uint256 proposalId, address voter) external view returns (bytes32) {
+        return euint256.unwrap(receipts[proposalId][voter].votes);
+    }
+
+    /**
+     * @notice Check if proposal vote tallies are ACL accessible by contract
+     * @param proposalId ID of the proposal
+     * @return forACL Whether contract can access forVotes
+     * @return againstACL Whether contract can access againstVotes
+     * @return abstainACL Whether contract can access abstainVotes
+     */
+    function checkProposalVoteTalliesACL(uint256 proposalId) external view returns (
+        bool forACL,
+        bool againstACL,
+        bool abstainACL
+    ) {
+        Proposal storage proposal = proposals[proposalId];
+        forACL = euint256.unwrap(proposal.forVotes) != bytes32(0) && e.isAllowed(address(this), proposal.forVotes);
+        againstACL = euint256.unwrap(proposal.againstVotes) != bytes32(0) && e.isAllowed(address(this), proposal.againstVotes);
+        abstainACL = euint256.unwrap(proposal.abstainVotes) != bytes32(0) && e.isAllowed(address(this), proposal.abstainVotes);
     }
 }

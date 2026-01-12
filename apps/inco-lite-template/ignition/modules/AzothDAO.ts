@@ -15,9 +15,9 @@ const AzothDAOModule = buildModule("AzothDAOModule", (m) => {
   // Voting delay: 1 block (~2 seconds on Base Sepolia)
   const votingDelay = m.getParameter("voting_delay", 1n);
   
-  // Voting period: 10 blocks (~20 seconds on Base Sepolia)
-  // Allows quick voting during demo
-  const votingPeriod = m.getParameter("voting_period", 10n);
+  // Voting period: 30 blocks (~60 seconds on Base Sepolia)
+  // Gives enough time for demo voting
+  const votingPeriod = m.getParameter("voting_period", 30n);
   
   // Timelock period: 10 seconds (almost instant for demo)
   const timelockPeriod = m.getParameter("timelock_period", 10n);
@@ -59,8 +59,14 @@ const AzothDAOModule = buildModule("AzothDAOModule", (m) => {
   // Set the DAO as authorized in the vault
   m.call(vault, "setAuthorizedDAO", [dao]);
   
+  // Set the cGOV as authorized in the vault (for burning on ragequit)
+  m.call(vault, "setAuthorizedCGOV", [cGOV]);
+  
   // Set the DAO as authorized in the cGOV token
   m.call(cGOV, "setAuthorizedDAO", [dao]);
+  
+  // Set the vault as authorized in the cGOV token (for burning on ragequit)
+  m.call(cGOV, "setAuthorizedVault", [vault]);
 
   return {
     cUSDCMarketplace,

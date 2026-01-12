@@ -1,10 +1,11 @@
 // ============ Azoth DAO Contract Addresses ============
-// Deployed to Base Sepolia on January 11, 2026
+// Deployed to Base Sepolia on January 12, 2026
+// Version 13: Added finalizeProposal to determine pass/fail, only Succeeded can be queued
 
-export const CUSDC_MARKETPLACE_ADDRESS = "0xF04f49E9759Da5717C45E31B117166C527E2d9aa";
-export const CGOV_TOKEN_ADDRESS = "0x5FCf8cD9c46298A392187152ce5ecb44d485CE71";
-export const CONFIDENTIAL_VAULT_ADDRESS = "0x60bca031F013B979c3Ac1eC7a788A7dfBDA27257";
-export const AZOTH_DAO_ADDRESS = "0x9b5c9e764b4336274aC88EFdA38cC55b68A8ba4A";
+export const CUSDC_MARKETPLACE_ADDRESS = "0x637076397294eC96A92415Be58ca3e24fE44d529";
+export const CGOV_TOKEN_ADDRESS = "0xdA9B7d018e06f4CE070e708653da7629781A101b";
+export const CONFIDENTIAL_VAULT_ADDRESS = "0xb0C98C67150Ec4594E8b9F234A04468cCfC0dD82";
+export const AZOTH_DAO_ADDRESS = "0x5d22F3621dD106Daf7Ea8EA7C93c8dF29f2Ae1e7";
 
 // ============ cUSDC Marketplace ABI ============
 export const CUSDC_MARKETPLACE_ABI = [
@@ -59,6 +60,20 @@ export const CUSDC_MARKETPLACE_ABI = [
     inputs: [],
     name: "totalMinted",
     outputs: [{ internalType: "euint256", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "checkBalanceACL",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getBalanceHandle",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
     stateMutability: "view",
     type: "function",
   },
@@ -172,6 +187,20 @@ export const CGOV_TOKEN_ABI = [
     name: "TokensBurned",
     type: "event",
   },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "checkBalanceACL",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getBalanceHandle",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
 ] as const;
 
 // ============ Confidential Vault ABI ============
@@ -182,7 +211,7 @@ export const CONFIDENTIAL_VAULT_ABI = [
     type: "constructor",
   },
   {
-    inputs: [{ internalType: "euint256", name: "assets", type: "bytes32" }],
+    inputs: [],
     name: "deposit",
     outputs: [{ internalType: "euint256", name: "sharesReceived", type: "bytes32" }],
     stateMutability: "nonpayable",
@@ -233,6 +262,27 @@ export const CONFIDENTIAL_VAULT_ABI = [
     ],
     name: "Withdraw",
     type: "event",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "checkSharesACL",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "address", name: "user", type: "address" }],
+    name: "getSharesHandle",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "withdrawAll",
+    outputs: [{ internalType: "euint256", name: "assetsWithdrawn", type: "bytes32" }],
+    stateMutability: "nonpayable",
+    type: "function",
   },
 ] as const;
 
@@ -311,6 +361,17 @@ export const AZOTH_DAO_ABI = [
     type: "function",
   },
   {
+    inputs: [
+      { internalType: "uint256", name: "proposalId", type: "uint256" },
+      { internalType: "uint256", name: "decryptedForVotes", type: "uint256" },
+      { internalType: "uint256", name: "decryptedAgainstVotes", type: "uint256" },
+    ],
+    name: "finalizeProposal",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [{ internalType: "uint256", name: "proposalId", type: "uint256" }],
     name: "queueProposal",
     outputs: [],
@@ -364,6 +425,14 @@ export const AZOTH_DAO_ABI = [
       { internalType: "euint256", name: "abstainVotes", type: "bytes32" },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  // Request ACL access to reveal vote results (only works after voting ends)
+  {
+    inputs: [{ internalType: "uint256", name: "proposalId", type: "uint256" }],
+    name: "revealVotes",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -480,6 +549,38 @@ export const AZOTH_DAO_ABI = [
     inputs: [{ indexed: true, internalType: "uint256", name: "proposalId", type: "uint256" }],
     name: "ProposalCanceled",
     type: "event",
+  },
+  // Debug functions
+  {
+    inputs: [
+      { internalType: "uint256", name: "proposalId", type: "uint256" },
+      { internalType: "address", name: "voter", type: "address" },
+    ],
+    name: "checkVoteACL",
+    outputs: [{ internalType: "bool", name: "", type: "bool" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      { internalType: "uint256", name: "proposalId", type: "uint256" },
+      { internalType: "address", name: "voter", type: "address" },
+    ],
+    name: "getVoteHandle",
+    outputs: [{ internalType: "bytes32", name: "", type: "bytes32" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "proposalId", type: "uint256" }],
+    name: "checkProposalVoteTalliesACL",
+    outputs: [
+      { internalType: "bool", name: "forACL", type: "bool" },
+      { internalType: "bool", name: "againstACL", type: "bool" },
+      { internalType: "bool", name: "abstainACL", type: "bool" },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
 ] as const;
 

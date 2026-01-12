@@ -5,6 +5,11 @@ import {inco, e, ebool, euint256} from "@inco/lightning/src/Lib.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
+// Interface for DAO membership check
+interface IAzothDAO {
+    function isMember(address account) external view returns (bool);
+}
+
 /**
  * @title ConfidentialGovernanceToken (cGOV)
  * @notice Non-transferable confidential governance token for voting power
@@ -13,6 +18,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  * Key Design Principles (from Azoth DAO architecture):
  * - Non-transferable (soulbound to address) - prevents vote buying
  * - Minted via ETH payment (anti-spam mechanism)
+ * - REQUIRES DAO membership (must have vault shares first)
  * - Can be burned on voluntary exit
  * - Voting power only, no economic claim
  * - Balances are encrypted using Inco FHE
@@ -34,12 +40,15 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
     error NoETHToWithdraw();
     error ETHTransferFailed();
     error NonTransferable();
+    error NotDAOMember();
+    error DAONotSet();
 
     // ============ Events ============
     event TokensMinted(address indexed to, uint256 ethPaid);
     event TokensBurned(address indexed from);
     event MintPriceUpdated(uint256 oldPrice, uint256 newPrice);
     event DAOAuthorized(address indexed dao);
+    event VaultAuthorized(address indexed vault);
 
     // ============ Constants ============
     string public constant name = "Azoth Governance Token";
@@ -63,6 +72,9 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
 
     // Authorized DAO contract for balance access
     address public authorizedDAO;
+    
+    // Authorized Vault contract for burning on ragequit
+    address public authorizedVault;
 
     // ============ Constructor ============
     
@@ -80,11 +92,15 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
     /**
      * @notice Mint cGOV tokens by paying ETH
      * @dev Amount minted = msg.value / mintPrice
-     * This separates governance from economic stake while requiring commitment
+     * REQUIRES: User must be a DAO member (have vault shares and joined)
      * 
      * Example: If mintPrice = 0.001 ETH, sending 0.01 ETH mints 10 cGOV
      */
     function mint() external payable nonReentrant {
+        // CRITICAL: Must be a DAO member to mint governance tokens
+        if (authorizedDAO == address(0)) revert DAONotSet();
+        if (!IAzothDAO(authorizedDAO).isMember(msg.sender)) revert NotDAOMember();
+        
         if (msg.value < mintPrice) revert InsufficientETH();
         
         // Calculate tokens to mint based on ETH sent
@@ -93,27 +109,30 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
         
         euint256 encryptedAmount = tokenAmount.asEuint256();
         
-        // Update user balance
+        // Update user balance - use local variable pattern
+        euint256 newBalance;
         if (euint256.unwrap(_balances[msg.sender]) == bytes32(0)) {
-            _balances[msg.sender] = encryptedAmount;
+            newBalance = encryptedAmount;
         } else {
-            _balances[msg.sender] = _balances[msg.sender].add(encryptedAmount);
+            newBalance = _balances[msg.sender].add(encryptedAmount);
         }
+        _balances[msg.sender] = newBalance;
         
-        // Update total supply
-        _totalSupply = _totalSupply.add(encryptedAmount);
+        // Update total supply - use local variable pattern
+        euint256 newTotalSupply = _totalSupply.add(encryptedAmount);
+        _totalSupply = newTotalSupply;
         
         // Mark that this address has held cGOV
         hasHeldToken[msg.sender] = true;
         
-        // Set permissions
-        _balances[msg.sender].allowThis();
-        _balances[msg.sender].allow(msg.sender);
-        _totalSupply.allowThis();
+        // Set permissions - use local variables
+        newBalance.allowThis();
+        newBalance.allow(msg.sender);
+        newTotalSupply.allowThis();
 
         // Allow DAO to access balance for voting
         if (authorizedDAO != address(0)) {
-            _balances[msg.sender].allow(authorizedDAO);
+            newBalance.allow(authorizedDAO);
         }
         
         emit TokensMinted(msg.sender, msg.value);
@@ -133,14 +152,16 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
         // Only burn if user has sufficient balance (multiplexer pattern)
         euint256 burnAmount = hasSufficient.select(amount, uint256(0).asEuint256());
         
-        // Update balances
-        _balances[msg.sender] = userBalance.sub(burnAmount);
-        _totalSupply = _totalSupply.sub(burnAmount);
+        // Update balances - use local variable pattern
+        euint256 newBalance = userBalance.sub(burnAmount);
+        euint256 newTotalSupply = _totalSupply.sub(burnAmount);
+        _balances[msg.sender] = newBalance;
+        _totalSupply = newTotalSupply;
         
-        // Set permissions
-        _balances[msg.sender].allowThis();
-        _balances[msg.sender].allow(msg.sender);
-        _totalSupply.allowThis();
+        // Set permissions - use local variables
+        newBalance.allowThis();
+        newBalance.allow(msg.sender);
+        newTotalSupply.allowThis();
         
         emit TokensBurned(msg.sender);
     }
@@ -152,16 +173,47 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
     function burnAll() external nonReentrant {
         euint256 userBalance = _balances[msg.sender];
         
-        // Update balances
-        _balances[msg.sender] = uint256(0).asEuint256();
-        _totalSupply = _totalSupply.sub(userBalance);
+        // Update balances - use local variable pattern
+        euint256 newBalance = uint256(0).asEuint256();
+        euint256 newTotalSupply = _totalSupply.sub(userBalance);
+        _balances[msg.sender] = newBalance;
+        _totalSupply = newTotalSupply;
         
-        // Set permissions
-        _balances[msg.sender].allowThis();
-        _balances[msg.sender].allow(msg.sender);
-        _totalSupply.allowThis();
+        // Set permissions - use local variables
+        newBalance.allowThis();
+        newBalance.allow(msg.sender);
+        newTotalSupply.allowThis();
         
         emit TokensBurned(msg.sender);
+    }
+
+    /**
+     * @notice Burn all cGOV tokens for a user (called by vault on ragequit)
+     * @dev Only callable by authorized vault
+     * @param user Address to burn tokens for
+     */
+    function burnAllFor(address user) external nonReentrant {
+        // Only vault can call this (for ragequit)
+        // Note: We need to add vault authorization
+        if (msg.sender != authorizedVault) revert UnauthorizedAccess();
+        
+        euint256 userBalance = _balances[user];
+        
+        // Skip if no balance
+        if (euint256.unwrap(userBalance) == bytes32(0)) return;
+        
+        // Update balances - use local variable pattern
+        euint256 newBalance = uint256(0).asEuint256();
+        euint256 newTotalSupply = _totalSupply.sub(userBalance);
+        _balances[user] = newBalance;
+        _totalSupply = newTotalSupply;
+        
+        // Set permissions - use local variables
+        newBalance.allowThis();
+        newBalance.allow(user);
+        newTotalSupply.allowThis();
+        
+        emit TokensBurned(user);
     }
     
     // ============ View Functions ============
@@ -222,6 +274,15 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
         authorizedDAO = dao;
         emit DAOAuthorized(dao);
     }
+
+    /**
+     * @notice Set the authorized vault contract
+     * @param vault Address of the ConfidentialVault contract
+     */
+    function setAuthorizedVault(address vault) external onlyOwner {
+        authorizedVault = vault;
+        emit VaultAuthorized(vault);
+    }
     
     /**
      * @notice Withdraw collected ETH
@@ -232,6 +293,31 @@ contract ConfidentialGovernanceToken is Ownable, ReentrancyGuard {
         if (balance == 0) revert NoETHToWithdraw();
         (bool success, ) = owner().call{value: balance}("");
         if (!success) revert ETHTransferFailed();
+    }
+
+    // ============ Debug Functions ============
+
+    /**
+     * @notice Check if a user is allowed to access their own cGOV balance
+     * @dev For debugging ACL issues
+     * @param user Address to check
+     * @return Whether the user can access their balance handle
+     */
+    function checkBalanceACL(address user) external view returns (bool) {
+        euint256 userBalance = _balances[user];
+        if (euint256.unwrap(userBalance) == bytes32(0)) {
+            return false; // No balance exists
+        }
+        return e.isAllowed(user, userBalance);
+    }
+
+    /**
+     * @notice Get raw balance handle for debugging
+     * @param user Address to query
+     * @return The raw bytes32 handle
+     */
+    function getBalanceHandle(address user) external view returns (bytes32) {
+        return euint256.unwrap(_balances[user]);
     }
     
     // ============ Transfer Prevention ============

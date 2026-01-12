@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Urbanist } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import WalletProvider from "@/wallet/provider";
 
-const urbanist = Urbanist({
-  variable: "--font-urbanist",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Inco NextJS Template",
-  description: "",
+  title: "Azoth DAO | Confidential Governance",
+  description: "Privacy-preserving DAO governance powered by fully homomorphic encryption",
 };
 
 export default function RootLayout({
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${urbanist.variable} font-sans antialiased`} suppressHydrationWarning>
+    <html lang="en" className="dark">
+      <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0f] text-gray-100`} suppressHydrationWarning>
         <WalletProvider>{children}</WalletProvider>
       </body>
     </html>

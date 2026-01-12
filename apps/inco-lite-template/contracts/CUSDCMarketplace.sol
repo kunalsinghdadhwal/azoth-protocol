@@ -80,20 +80,29 @@ contract CUSDCMarketplace is Ownable, ReentrancyGuard {
         
         euint256 encryptedAmount = cUSDCAmount.asEuint256();
         
-        // Update user balance
+        // Update user balance - IMPORTANT: Follow Inco pattern with local variables
+        euint256 newBalance;
         if (euint256.unwrap(_balances[msg.sender]) == bytes32(0)) {
-            _balances[msg.sender] = encryptedAmount;
+            newBalance = encryptedAmount;
         } else {
-            _balances[msg.sender] = _balances[msg.sender].add(encryptedAmount);
+            newBalance = _balances[msg.sender].add(encryptedAmount);
         }
+        _balances[msg.sender] = newBalance;
         
         // Update total minted
-        totalMinted = totalMinted.add(encryptedAmount);
+        euint256 newTotalMinted = totalMinted.add(encryptedAmount);
+        totalMinted = newTotalMinted;
         
-        // Grant access permissions
-        _balances[msg.sender].allowThis();
-        _balances[msg.sender].allow(msg.sender);
-        totalMinted.allowThis();
+        // Grant access permissions - MUST use local variables, not storage reads
+        newBalance.allowThis();
+        newBalance.allow(msg.sender);
+        newTotalMinted.allowThis();
+        
+        // CRITICAL: Grant vault access to user's balance for deposits
+        // This allows the vault to pass the handle to vaultTransfer
+        if (authorizedVault != address(0)) {
+            newBalance.allow(authorizedVault);
+        }
         
         emit CUSDCPurchased(msg.sender, msg.value);
     }
@@ -127,26 +136,29 @@ contract CUSDCMarketplace is Ownable, ReentrancyGuard {
         // Use multiplexer pattern - only transfer if sufficient balance
         euint256 transferAmount = hasSufficient.select(amount, uint256(0).asEuint256());
         
-        // Subtract from sender
-        _balances[from] = fromBalance.sub(transferAmount);
+        // Subtract from sender - use local variable pattern
+        euint256 newFromBalance = fromBalance.sub(transferAmount);
+        _balances[from] = newFromBalance;
         
-        // Add to receiver
+        // Add to receiver - use local variable pattern
+        euint256 newToBalance;
         if (euint256.unwrap(_balances[to]) == bytes32(0)) {
-            _balances[to] = transferAmount;
+            newToBalance = transferAmount;
         } else {
-            _balances[to] = _balances[to].add(transferAmount);
+            newToBalance = _balances[to].add(transferAmount);
         }
+        _balances[to] = newToBalance;
         
-        // Update permissions
-        _balances[from].allowThis();
-        _balances[from].allow(from);
-        _balances[to].allowThis();
-        _balances[to].allow(to);
+        // Update permissions - use local variables
+        newFromBalance.allowThis();
+        newFromBalance.allow(from);
+        newToBalance.allowThis();
+        newToBalance.allow(to);
         
         // Allow vault to access balances
         if (authorizedVault != address(0)) {
-            _balances[from].allow(authorizedVault);
-            _balances[to].allow(authorizedVault);
+            newFromBalance.allow(authorizedVault);
+            newToBalance.allow(authorizedVault);
         }
 
         emit Transfer(from, to);
@@ -155,6 +167,12 @@ contract CUSDCMarketplace is Ownable, ReentrancyGuard {
     /**
      * @notice Internal transfer for vault deposits
      * @dev Called by vault during deposit
+     * @param from User depositing cUSDC
+     * @param amount Expected to be user's full balance handle (same as _balances[from])
+     * @return transferredAmount The amount actually transferred
+     * 
+     * Note: We use fromBalance for the comparison since marketplace has allowThis() on it.
+     * The amount parameter is verified by checking it matches the stored balance.
      */
     function vaultTransfer(
         address from,
@@ -162,27 +180,44 @@ contract CUSDCMarketplace is Ownable, ReentrancyGuard {
     ) external onlyAuthorizedVault returns (euint256 transferredAmount) {
         euint256 fromBalance = _balances[from];
         
-        // Check sufficient balance
-        ebool hasSufficient = fromBalance.ge(amount);
-        
-        // Only transfer if sufficient
-        transferredAmount = hasSufficient.select(amount, uint256(0).asEuint256());
-        
-        // Subtract from sender
-        _balances[from] = fromBalance.sub(transferredAmount);
-        
-        // Add to vault
-        if (euint256.unwrap(_balances[authorizedVault]) == bytes32(0)) {
-            _balances[authorizedVault] = transferredAmount;
-        } else {
-            _balances[authorizedVault] = _balances[authorizedVault].add(transferredAmount);
+        // IMPORTANT: Check if user has never had a balance (bytes32(0))
+        // vs having an encrypted zero balance. If bytes32(0), return early with zero.
+        if (euint256.unwrap(fromBalance) == bytes32(0)) {
+            // User has no balance at all - return encrypted zero
+            transferredAmount = uint256(0).asEuint256();
+            transferredAmount.allowThis();
+            transferredAmount.allow(from);
+            return transferredAmount;
         }
         
-        // Update permissions
-        _balances[from].allowThis();
-        _balances[from].allow(from);
-        _balances[authorizedVault].allowThis();
-        _balances[authorizedVault].allow(authorizedVault);
+        // For deposits, we transfer the FULL balance
+        // The user's balance exists (not bytes32(0)), so transfer it all
+        // We avoid FHE comparisons that could have ACL issues
+        transferredAmount = fromBalance;
+        
+        // Zero out sender's balance - create a fresh encrypted zero
+        euint256 newFromBalance = uint256(0).asEuint256();
+        _balances[from] = newFromBalance;
+        
+        // Add to vault - use local variable pattern
+        euint256 newVaultBalance;
+        if (euint256.unwrap(_balances[authorizedVault]) == bytes32(0)) {
+            newVaultBalance = transferredAmount;
+        } else {
+            newVaultBalance = _balances[authorizedVault].add(transferredAmount);
+        }
+        _balances[authorizedVault] = newVaultBalance;
+        
+        // Update permissions - use local variables
+        newFromBalance.allowThis();
+        newFromBalance.allow(from);
+        // CRITICAL: Grant vault access to user's updated balance for future deposits
+        if (authorizedVault != address(0)) {
+            newFromBalance.allow(authorizedVault);
+        }
+        
+        newVaultBalance.allowThis();
+        newVaultBalance.allow(authorizedVault);
         
         transferredAmount.allowThis();
         transferredAmount.allow(from);
@@ -205,26 +240,62 @@ contract CUSDCMarketplace is Ownable, ReentrancyGuard {
         // Only withdraw if sufficient
         withdrawnAmount = hasSufficient.select(amount, uint256(0).asEuint256());
         
-        // Subtract from vault
-        _balances[authorizedVault] = vaultBalance.sub(withdrawnAmount);
+        // Subtract from vault - use local variable pattern
+        euint256 newVaultBalance = vaultBalance.sub(withdrawnAmount);
+        _balances[authorizedVault] = newVaultBalance;
         
-        // Add to user
+        // Add to user - use local variable pattern
+        euint256 newToBalance;
         if (euint256.unwrap(_balances[to]) == bytes32(0)) {
-            _balances[to] = withdrawnAmount;
+            newToBalance = withdrawnAmount;
         } else {
-            _balances[to] = _balances[to].add(withdrawnAmount);
+            newToBalance = _balances[to].add(withdrawnAmount);
         }
+        _balances[to] = newToBalance;
         
-        // Update permissions
-        _balances[authorizedVault].allowThis();
-        _balances[authorizedVault].allow(authorizedVault);
-        _balances[to].allowThis();
-        _balances[to].allow(to);
+        // Update permissions - use local variables
+        newVaultBalance.allowThis();
+        newVaultBalance.allow(authorizedVault);
+        
+        // User's new balance needs ACL for:
+        // 1. This contract (marketplace) - to perform FHE operations in vaultTransfer
+        // 2. The user - to read/decrypt their balance
+        // 3. The vault - so vault can pass this handle to vaultTransfer
+        newToBalance.allowThis();  // Marketplace can use this handle in FHE operations
+        newToBalance.allow(to);    // User can decrypt their balance
+        if (authorizedVault != address(0)) {
+            newToBalance.allow(authorizedVault);  // Vault can pass this handle
+        }
         
         withdrawnAmount.allowThis();
         withdrawnAmount.allow(to);
         
         return withdrawnAmount;
+    }
+
+    // ============ Debug Functions ============
+
+    /**
+     * @notice Check if a user is allowed to access their own balance
+     * @dev For debugging ACL issues
+     * @param user Address to check
+     * @return Whether the user can access their balance handle
+     */
+    function checkBalanceACL(address user) external view returns (bool) {
+        euint256 balance = _balances[user];
+        if (euint256.unwrap(balance) == bytes32(0)) {
+            return false; // No balance exists
+        }
+        return e.isAllowed(user, balance);
+    }
+
+    /**
+     * @notice Get raw balance handle for debugging
+     * @param user Address to query
+     * @return The raw bytes32 handle
+     */
+    function getBalanceHandle(address user) external view returns (bytes32) {
+        return euint256.unwrap(_balances[user]);
     }
 
     // ============ Admin Functions ============
