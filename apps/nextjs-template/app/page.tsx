@@ -1,10 +1,12 @@
-"use client";
 import React from 'react';
 import Navbar from '../components/Navbar';
 import HeroSection from '../components/HeroSection';
 import StatusBar from '../components/StatusBar';
 import CoreSection from '../components/CoreSection';
+import TEESection from '../components/TEESection';
 import ProtocolsSection from '../components/ProtocolsSection';
+import NetworkMapSection from '../components/NetworkMapSection';
+import MarketSection from '../components/MarketSection';
 import SigilsSection from '../components/SigilsSection';
 import Footer from '../components/Footer';
 
@@ -23,7 +25,10 @@ const App: React.FC = () => {
         <HeroSection />
         <StatusBar />
         <CoreSection />
+        <TEESection /> 
         <ProtocolsSection />
+        <NetworkMapSection />
+        <MarketSection />
         <SigilsSection />
       </main>
       <Footer />

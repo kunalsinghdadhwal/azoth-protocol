@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
         <div className="lg:col-span-2">
           <div className="flex items-center gap-4 mb-10">
             <Grid className="text-[#00f5ff] w-8 h-8 text-shadow-glow" />
-            <span className="font-display font-black text-3xl text-white tracking-[0.2em] uppercase text-shadow-silver">QUANTUM_VAULT</span>
+            <span className="font-display font-black text-3xl text-white tracking-[0.2em] uppercase text-shadow-silver">AZOTH_PROTOCOL</span>
           </div>
           <p className="font-mono text-xs text-zinc-500 max-w-md leading-loose uppercase tracking-widest">
             The final iteration of cryptographic independence. We are the architects of the silent void. The vault is open only to those who speak the language of the code.

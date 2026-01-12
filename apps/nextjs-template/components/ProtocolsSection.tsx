@@ -4,7 +4,7 @@ import ScrambleText from './ScrambleText';
 
 const ProtocolsSection: React.FC = () => {
   return (
-    <section id="protocols" className="py-32 relative w-full overflow-hidden">
+    <section id="tech-stack" className="py-32 relative w-full overflow-hidden">
         {/* Background Grid */}
        <div className="absolute inset-0 bg-[#0a0a0a]">
           <div className="absolute inset-0 opacity-10" 
@@ -21,14 +21,14 @@ const ProtocolsSection: React.FC = () => {
           <div>
             <div className="flex items-center gap-2 mb-2">
                  <ScanLine className="w-4 h-4 text-[#00f5ff] animate-pulse" />
-                 <span className="font-mono text-[10px] text-[#00f5ff] tracking-widest uppercase">Scanning Protocol Layers...</span>
+                 <span className="font-mono text-[10px] text-[#00f5ff] tracking-widest uppercase">Scanning Dependencies...</span>
             </div>
             <h2 className="font-display text-4xl md:text-5xl font-black text-white uppercase tracking-tighter">
-                <ScrambleText text="DECRYPTION_LOGS" hoverTrigger={true} />
+                <ScrambleText text="TECH_STACK" hoverTrigger={true} />
             </h2>
           </div>
           <div className="hidden md:block text-right">
-            <span className="font-mono text-4xl text-white/5 uppercase font-bold tracking-tighter">Quantum_OS_v4</span>
+            <span className="font-mono text-4xl text-white/5 uppercase font-bold tracking-tighter">Powered_By</span>
           </div>
         </div>
         
@@ -41,14 +41,14 @@ const ProtocolsSection: React.FC = () => {
             
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-10">
-                <span className="font-mono text-[#00f5ff] text-[10px] border border-[#00f5ff]/20 px-2 py-1 bg-black">LOG_ID: A-422</span>
-                <Fingerprint className="text-[#00f5ff] w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
+                <span className="font-mono text-[#00f5ff] text-[10px] border border-[#00f5ff]/20 px-2 py-1 bg-black">LAYER_1</span>
+                <Shield className="text-[#00f5ff] w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white mb-6 group-hover:text-[#00f5ff] transition-colors group-hover:translate-x-2 duration-300">THE_PULSE</h3>
+                <h3 className="font-display text-2xl font-bold text-white mb-6 group-hover:text-[#00f5ff] transition-colors group-hover:translate-x-2 duration-300">INCO_NETWORK</h3>
                 <div className="cursor-pointer">
                 <p className="font-mono text-[11px] text-zinc-400 leading-relaxed group-hover:text-white transition-colors duration-300">
                     <span className="opacity-50 group-hover:opacity-100 transition-opacity duration-700">
-                        A rhythmic data stream transmitted across the darknet, ensuring node synchronization without exposing the underlying validator IP sets.
+                        Modular blockchain bringing Fully Homomorphic Encryption (FHE) to smart contracts. Enables confidential voting and hidden token balances.
                     </span>
                 </p>
                 </div>
@@ -57,8 +57,8 @@ const ProtocolsSection: React.FC = () => {
                     <div className="absolute top-0 left-0 h-full bg-[#00f5ff] w-0 group-hover:w-full transition-all duration-[2000ms] ease-out"></div>
                 </div>
                 <div className="mt-2 flex justify-between items-center">
-                    <span className="text-[8px] text-zinc-600 font-mono">STATUS: ENCRYPTED</span>
-                    <span className="text-[8px] text-[#00f5ff] opacity-0 group-hover:opacity-100 font-mono tracking-widest transition-opacity delay-[2000ms] animate-pulse">DECRYPTED_SUCCESSFULLY</span>
+                    <span className="text-[8px] text-zinc-600 font-mono">STATUS: ACTIVE</span>
+                    <span className="text-[8px] text-[#00f5ff] opacity-0 group-hover:opacity-100 font-mono tracking-widest transition-opacity delay-[2000ms] animate-pulse">FHE_ENABLED</span>
                 </div>
             </div>
           </div>
@@ -71,14 +71,14 @@ const ProtocolsSection: React.FC = () => {
 
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-10">
-                <span className="font-mono text-[#e0f2fe] text-[10px] border border-[#e0f2fe]/20 px-2 py-1 bg-black">LOG_ID: B-899</span>
+                <span className="font-mono text-[#e0f2fe] text-[10px] border border-[#e0f2fe]/20 px-2 py-1 bg-black">COMPUTE</span>
                 <Network className="text-[#e0f2fe] w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white mb-6 group-hover:text-[#e0f2fe] transition-colors group-hover:translate-x-2 duration-300">THE_SWARM</h3>
+                <h3 className="font-display text-2xl font-bold text-white mb-6 group-hover:text-[#e0f2fe] transition-colors group-hover:translate-x-2 duration-300">NILLION</h3>
                 <div className="cursor-pointer">
                 <p className="font-mono text-[11px] text-zinc-400 leading-relaxed group-hover:text-white transition-colors duration-300">
                      <span className="opacity-50 group-hover:opacity-100 transition-opacity duration-700">
-                        Autonomous data packets that fragment and relocate when detected by unauthorized scanning arrays. Living metadata protection.
+                        Blind computation network powering nilDB and nilAI. Securely stores agent chat history and runs LLM inference in Trusted Execution Environments.
                      </span>
                 </p>
                 </div>
@@ -87,8 +87,8 @@ const ProtocolsSection: React.FC = () => {
                     <div className="absolute top-0 left-0 h-full bg-[#e0f2fe] w-0 group-hover:w-full transition-all duration-[2000ms] ease-out"></div>
                 </div>
                 <div className="mt-2 flex justify-between items-center">
-                    <span className="text-[8px] text-zinc-600 font-mono">STATUS: HIDDEN</span>
-                    <span className="text-[8px] text-[#e0f2fe] opacity-0 group-hover:opacity-100 font-mono tracking-widest transition-opacity delay-[2000ms] animate-pulse">SWARM_ACTIVATED</span>
+                    <span className="text-[8px] text-zinc-600 font-mono">STATUS: CONNECTED</span>
+                    <span className="text-[8px] text-[#e0f2fe] opacity-0 group-hover:opacity-100 font-mono tracking-widest transition-opacity delay-[2000ms] animate-pulse">NILAI_READY</span>
                 </div>
             </div>
           </div>
@@ -101,14 +101,14 @@ const ProtocolsSection: React.FC = () => {
 
             <div className="relative z-10">
                 <div className="flex justify-between items-start mb-10">
-                <span className="font-mono text-[#00f5ff] text-[10px] border border-[#00f5ff]/20 px-2 py-1 bg-black">LOG_ID: C-111</span>
-                <Shield className="text-[#00f5ff] w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
+                <span className="font-mono text-[#00f5ff] text-[10px] border border-[#00f5ff]/20 px-2 py-1 bg-black">PAYMENTS</span>
+                <Fingerprint className="text-[#00f5ff] w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h3 className="font-display text-2xl font-bold text-white mb-6 group-hover:text-[#00f5ff] transition-colors group-hover:translate-x-2 duration-300">THE_WALL</h3>
+                <h3 className="font-display text-2xl font-bold text-white mb-6 group-hover:text-[#00f5ff] transition-colors group-hover:translate-x-2 duration-300">X402_PROTOCOL</h3>
                 <div className="cursor-pointer">
                 <p className="font-mono text-[11px] text-zinc-400 leading-relaxed group-hover:text-white transition-colors duration-300">
                      <span className="opacity-50 group-hover:opacity-100 transition-opacity duration-700">
-                        Mathematical constructs that mimic a black hole's event horizon. Data entering the wall cannot be extracted without the Monolith key.
+                        Micropayment infrastructure for AI agents. Enables pay-per-query access ($0.01) for governance assistance without massive gas fees.
                      </span>
                 </p>
                 </div>
@@ -117,8 +117,8 @@ const ProtocolsSection: React.FC = () => {
                     <div className="absolute top-0 left-0 h-full bg-[#00f5ff] w-0 group-hover:w-full transition-all duration-[2000ms] ease-out"></div>
                 </div>
                 <div className="mt-2 flex justify-between items-center">
-                    <span className="text-[8px] text-zinc-600 font-mono">STATUS: LOCKED</span>
-                    <span className="text-[8px] text-[#00f5ff] opacity-0 group-hover:opacity-100 font-mono tracking-widest transition-opacity delay-[2000ms] animate-pulse">ACCESS_GRANTED</span>
+                    <span className="text-[8px] text-zinc-600 font-mono">STATUS: OPTIMIZED</span>
+                    <span className="text-[8px] text-[#00f5ff] opacity-0 group-hover:opacity-100 font-mono tracking-widest transition-opacity delay-[2000ms] animate-pulse">LOW_LATENCY</span>
                 </div>
             </div>
           </div>

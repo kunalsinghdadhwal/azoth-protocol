@@ -22,7 +22,7 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-  title: "Quantum Vault Interface | Cyber-Obsidian DAO",
+  title: "Azoth Protocol Interface | Cyber-Obsidian DAO",
   description: "Privacy-preserving DAO governance powered by fully homomorphic encryption",
 };
 

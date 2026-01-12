@@ -24,7 +24,7 @@ const SigilsSection: React.FC = () => {
                     DAO <span className="text-[#e0f2fe] opacity-80">GOVERNANCE</span>
                 </h2>
                 <p className="font-mono text-xs md:text-sm text-zinc-400 leading-loose uppercase tracking-widest max-w-xl">
-                    The legislative core of the Quantum Vault. Submit encrypted proposals, stake sigils for voting weight, and direct the protocol's evolution through zero-knowledge ballots.
+                    The legislative core of the Azoth Protocol. Submit encrypted proposals, stake sigils for voting weight, and direct the protocol's evolution through zero-knowledge ballots.
                 </p>
             </div>
 

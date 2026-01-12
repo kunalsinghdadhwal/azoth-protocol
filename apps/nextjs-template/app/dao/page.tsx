@@ -25,6 +25,7 @@ type Tab = "marketplace" | "vault" | "governance" | "membership" | "proposals";
 const Page = () => {
   const [activeTab, setActiveTab] = useState<Tab>("marketplace");
   const [showDebug, setShowDebug] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { isConnected, address } = useAccount();
 
   useEffect(() => {
@@ -36,18 +37,18 @@ const Page = () => {
     console.log("[App] Connected address:", address);
   }, [address]);
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: "marketplace", label: "cUSDC" },
-    { id: "vault", label: "Vault" },
-    { id: "governance", label: "cGOV" },
-    { id: "membership", label: "Membership" },
-    { id: "proposals", label: "Proposals" },
+  const tabs: { id: Tab; label: string; icon: string }[] = [
+    { id: "marketplace", label: "cUSDC Marketplace", icon: "💰" },
+    { id: "vault", label: "Confidential Vault", icon: "🔐" },
+    { id: "governance", label: "cGOV Token", icon: "🗳️" },
+    { id: "membership", label: "DAO Membership", icon: "👥" },
+    { id: "proposals", label: "Proposals", icon: "📋" },
   ];
 
   return (
     <div className="min-h-screen bg-[#0a0a0f]">
+      <Header />
       <Padder>
-        <Header />
         
         {!isConnected ? (
           <div className="max-w-2xl mx-auto text-center py-20">
@@ -117,70 +118,137 @@ const Page = () => {
           </div>
         ) : (
           <>
-            {/* Tab Navigation */}
-            <div className="flex space-x-2 mb-8 overflow-x-auto pb-2">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`tab-item whitespace-nowrap ${activeTab === tab.id ? "active" : ""}`}
-                >
-                  {tab.label}
-                </button>
-              ))}
+            {/* Collapsible Sidebar */}
+            <aside className={`hidden lg:block fixed left-0 top-16 bottom-0 z-40 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-60'}`}>
+              <div className="h-full flex flex-col glass-panel border-r border-[#e0f2fe]/5">
+                {/* Sidebar Header */}
+                <div className="flex items-center justify-between p-3 border-b border-[#e0f2fe]/5">
+                  {!sidebarCollapsed && (
+                    <span className="font-mono text-[9px] tracking-[0.2em] text-[#00f5ff] font-bold">MENU</span>
+                  )}
+                  <button
+                    onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                    className="ml-auto p-1.5 border border-[#e0f2fe]/10 hover:border-[#00f5ff]/30 hover:bg-[#00f5ff]/5 transition-all"
+                    title={sidebarCollapsed ? "Expand" : "Collapse"}
+                  >
+                    <span className="font-mono text-[10px] text-[#00f5ff]">{sidebarCollapsed ? '→' : '←'}</span>
+                  </button>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+                  {tabs.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`w-full text-left group relative px-3 py-2.5 transition-all duration-200 ${
+                        activeTab === tab.id
+                          ? "bg-[#00f5ff]/10 border-l-2 border-[#00f5ff]"
+                          : "border-l-2 border-transparent hover:border-[#e0f2fe]/20 hover:bg-[#e0f2fe]/5"
+                      }`}
+                      title={sidebarCollapsed ? tab.label : undefined}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm shrink-0">{tab.icon}</span>
+                        {!sidebarCollapsed && (
+                          <span className={`font-mono text-[10px] tracking-[0.1em] transition-colors truncate ${
+                            activeTab === tab.id ? "text-[#00f5ff] font-bold" : "text-[#e0f2fe]/70 group-hover:text-[#e0f2fe]"
+                          }`}>
+                            {tab.label}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* Footer */}
+                {!sidebarCollapsed && (
+                  <div className="p-3 border-t border-[#e0f2fe]/5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                      <span className="font-mono text-[8px] tracking-[0.15em] text-[#e0f2fe]/50">CONNECTED</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </aside>
+
+            {/* Mobile Navigation */}
+            <div className="lg:hidden glass-panel border border-[#e0f2fe]/5 rounded-lg p-2 mb-6">
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`shrink-0 px-3 py-2 font-mono text-[9px] tracking-[0.1em] transition-all ${
+                      activeTab === tab.id
+                        ? "bg-[#00f5ff]/10 border border-[#00f5ff]/30 text-[#00f5ff] font-bold"
+                        : "border border-[#e0f2fe]/10 text-[#e0f2fe]/70 hover:border-[#00f5ff]/20"
+                    }`}
+                  >
+                    <span className="mr-1.5">{tab.icon}</span>
+                    {tab.label.split(' ')[0]}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Tab Content */}
-            <div className="max-w-2xl mx-auto">
-              {activeTab === "marketplace" && <CUSDCMarketplace />}
-              {activeTab === "vault" && <ConfidentialVault />}
-              {activeTab === "governance" && <CGOVToken />}
-              {activeTab === "membership" && <DAOMembership />}
-              {activeTab === "proposals" && <Proposals />}
+            {/* Main Content */}
+            <div className={`transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'}`}>
+              <div className="max-w-4xl mx-auto">
+                {activeTab === "marketplace" && <CUSDCMarketplace />}
+                {activeTab === "vault" && <ConfidentialVault />}
+                {activeTab === "governance" && <CGOVToken />}
+                {activeTab === "membership" && <DAOMembership />}
+                {activeTab === "proposals" && <Proposals />}
+              </div>
             </div>
 
             {/* Footer Info */}
-            <div className="mt-12 max-w-2xl mx-auto">
-              <div className="card p-6">
-                <h3 className="text-sm font-semibold text-gray-400 mb-4">
-                  Protocol Parameters
-                </h3>
-                <div className="grid grid-cols-3 gap-6 text-center text-sm">
-                  <div>
-                    <p className="text-gray-500 mb-1">Voting Period</p>
-                    <p className="font-semibold text-purple-400">~60 seconds</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">Timelock</p>
-                    <p className="font-semibold text-purple-400">10 seconds</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 mb-1">Quorum</p>
-                    <p className="font-semibold text-purple-400">10%</p>
+            <div className={`mt-12 transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-60'}`}>
+              <div className="max-w-4xl mx-auto">
+                <div className="card p-6">
+                  <h3 className="text-sm font-semibold text-gray-400 mb-4">
+                    Protocol Parameters
+                  </h3>
+                  <div className="grid grid-cols-3 gap-6 text-center text-sm">
+                    <div>
+                      <p className="text-gray-500 mb-1">Voting Period</p>
+                      <p className="font-semibold text-purple-400">~60 seconds</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 mb-1">Timelock</p>
+                      <p className="font-semibold text-purple-400">10 seconds</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 mb-1">Quorum</p>
+                      <p className="font-semibold text-purple-400">10%</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Debug Panel */}
-              <div className="mt-4">
-                <button
-                  onClick={() => setShowDebug(!showDebug)}
-                  className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
-                >
-                  {showDebug ? "Hide Debug Info" : "Show Debug Info"}
-                </button>
                 
-                {showDebug && (
-                  <div className="mt-3 card p-4 font-mono text-xs">
-                    <p className="text-gray-500 mb-2">Contract Addresses (Base Sepolia):</p>
-                    <p className="text-gray-400">cUSDC: <span className="text-purple-400">{CUSDC_MARKETPLACE_ADDRESS}</span></p>
-                    <p className="text-gray-400">cGOV: <span className="text-purple-400">{CGOV_TOKEN_ADDRESS}</span></p>
-                    <p className="text-gray-400">Vault: <span className="text-purple-400">{CONFIDENTIAL_VAULT_ADDRESS}</span></p>
-                    <p className="text-gray-400">DAO: <span className="text-purple-400">{AZOTH_DAO_ADDRESS}</span></p>
-                    <p className="mt-3 text-gray-500">Your Address:</p>
-                    <p className="text-amber-400">{address}</p>
-                  </div>
-                )}
+                {/* Debug Panel */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setShowDebug(!showDebug)}
+                    className="text-xs text-gray-600 hover:text-gray-400 transition-colors"
+                  >
+                    {showDebug ? "Hide Debug Info" : "Show Debug Info"}
+                  </button>
+                  
+                  {showDebug && (
+                    <div className="mt-3 card p-4 font-mono text-xs">
+                      <p className="text-gray-500 mb-2">Contract Addresses (Base Sepolia):</p>
+                      <p className="text-gray-400">cUSDC: <span className="text-purple-400">{CUSDC_MARKETPLACE_ADDRESS}</span></p>
+                      <p className="text-gray-400">cGOV: <span className="text-purple-400">{CGOV_TOKEN_ADDRESS}</span></p>
+                      <p className="text-gray-400">Vault: <span className="text-purple-400">{CONFIDENTIAL_VAULT_ADDRESS}</span></p>
+                      <p className="text-gray-400">DAO: <span className="text-purple-400">{AZOTH_DAO_ADDRESS}</span></p>
+                      <p className="mt-3 text-gray-500">Your Address:</p>
+                      <p className="text-amber-400">{address}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
