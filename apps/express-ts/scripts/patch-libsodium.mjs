@@ -14,6 +14,8 @@ const __dirname = dirname(__filename);
 
 // Try multiple possible locations for pnpm hoisting
 const possiblePaths = [
+  // Direct node_modules in workspace root
+  join(__dirname, '..', '..', '..', 'node_modules', 'libsodium-wrappers-sumo', 'dist', 'modules-sumo-esm', 'libsodium-wrappers.mjs'),
   // Direct node_modules
   join(__dirname, '..', 'node_modules', 'libsodium-wrappers-sumo', 'dist', 'modules-sumo-esm', 'libsodium-wrappers.mjs'),
   // pnpm hoisted location - find dynamically
