@@ -1,135 +1,165 @@
-# Turborepo starter
+# ShadowSwap: Confidential AMM with Built-in MEV Shield on Inco Network
 
-This Turborepo starter is maintained by the Turborepo core team.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Hackathon Project](https://img.shields.io/badge/Hackathon-ETHGlobal%202026-blue)](https://ethglobal.com/)
+[![Built with Inco](https://img.shields.io/badge/Built%20with-Inco%20Network-orange)](https://www.inco.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-15.5-black)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-4.1-38B2AC)](https://tailwindcss.com/)
 
-## Using this example
+---
 
-Run the following command:
+## Table of Contents
 
-```sh
-npx create-turbo@latest
-```
+- [Overview](#overview)
+- [Key Problems Solved](#key-problems-solved)
+- [Features](#features)
+- [Technical Architecture](#technical-architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Development](#development)
+- [Deployment](#deployment)
+- [Usage Guide](#usage-guide)
+- [API Reference](#api-reference)
+- [Security Considerations](#security-considerations)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [Acknowledgments](#acknowledgments)
+- [License](#license)
 
-## What's inside?
+---
 
-This Turborepo includes the following packages/apps:
+## Overview
 
-### Apps and Packages
+ShadowSwap (also known as PrivAMM) is a privacy-first Automated Market Maker (AMM) protocol built on the Inco Network, leveraging Fully Homomorphic Encryption (FHE) via fhEVM to enable confidential trading. Traditional AMMs like Uniswap expose pool reserves, liquidity provider (LP) positions, swap sizes, and price impacts publicly, making them vulnerable to Maximum Extractable Value (MEV) attacks such as sandwiching and front-running. ShadowSwap solves this by keeping all sensitive data encrypted, ensuring true on-chain privacy while maintaining efficient price discovery and automated trading.
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+This project is inspired by Inco's flagship use cases for private AMMs and similar implementations like Zama's FHESwap. It's designed for hackathons like ETHGlobal, focusing on MEV resistance, institutional-grade privacy, and composability with Confidential ERC-20 tokens. Built in under 24 hours? Absolutely—prototype it on Base Sepolia testnet for a demo that wows judges!
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+### Why ShadowSwap?
 
-### Utilities
+| Traditional AMMs | ShadowSwap |
+|------------------|------------|
+| Public order flow visible to MEV bots | Encrypted transactions invisible to attackers |
+| LP positions exposed on-chain | Hidden liquidity positions |
+| Sandwich attacks commonplace | Zero-knowledge swap execution |
+| Institutional adoption barriers | Enterprise-ready privacy |
 
-This Turborepo has some additional tools already setup for you:
+### Key Problems Solved
+- **MEV Exploitation**: No visible order flow or tx sizes—MEV bots can't front-run or sandwich.
+- **LP Privacy**: Whales and institutions add/remove liquidity without revealing positions, preventing copycat strategies or impermanent loss sniping.
+- **Institutional Barriers**: Enables large-volume, confidential trades on public blockchains, bridging DeFi to traditional finance.
+- **Data Leaks**: All computations (swaps, price updates) occur on encrypted data, with selective decryption only for authorized users.
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+## Features
+- **MEV Resistance**: Encrypted swaps and reserves prevent sandwich attacks and front-running.
+- **LP Protection**: Hidden positions and contributions—perfect for high-value LPs.
+- **Institutional Appeal**: Private, large-scale trading without relying on centralized exchanges.
+- **Composable Privacy**: Integrates with Confidential ERC-20 for fully private token flows (e.g., stablecoins like cUSDC).
+- **Hackathon Demo Power**: Compare a ShadowSwap tx (nothing leaked on explorer) vs. Uniswap (full visibility).
+- **Fast & Secure**: Uses Inco Lightning (TEE mode) for low-latency operations and Ethos restaking for enhanced security.
 
-### Build
+## Technical Architecture
 
-To build all apps and packages, run the following command:
+### 1. Core Smart Contract (Solidity on fhEVM)
+- Extends Inco's library for encrypted types (`euint256` for reserves, balances).
+- **Reserves**: Stored as encrypted values (`tokenA_reserve`, `tokenB_reserve`).
+- **Swap Logic**: 
+  - User encrypts input via IncoJS.
+  - Constant product formula (x * y = k) computed blindly using FHE ops (add, mul, div).
+  - Output decrypted only for the user via attested decryption.
+- **Programmable Access Control**: Reveals data selectively (e.g., only to LPs or auditors).
 
-```
-cd my-turborepo
+### 2. Liquidity Management
+- Add/remove liquidity with encrypted amounts.
+- Mint/burn encrypted LP tokens (built on Confidential ERC-20 standard).
+- Private fee accrual and distribution.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+### 3. Price Discovery & Integrations
+- **Oracles**: Chainlink for external price feeds (encrypted slippage checks, TWAP-like logic).
+- **Constant Product AMM**: Adapted for FHE to maintain privacy without sacrificing efficiency.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+### 4. Frontend & User Experience
+- **Framework**: NextJS starter from Inco docs.
+- **Auth**: Privy for seamless wallet login.
+- **Encryption**: IncoJS SDK for client-side input encryption (swap amounts, min output).
+- **UI Flow**: Users see only their decrypted results; pool stats remain hidden.
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+### 5. Security Enhancements
+- **Restaking**: Ethos for pooled economic security.
+- **Modes**: Inco Lightning (TEE) for demo speed; full FHE for production privacy.
+- **Audits/Verification**: Attested compute for on-chain proofs of solvency (aggregate only).
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+## Getting Started
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+### Prerequisites
+- Node.js v18+
+- Yarn or npm
+- Wallet (e.g., MetaMask) with testnet funds on Base Sepolia.
+- Inco SDK and tools (install via `npm i incojs`).
 
-### Develop
+### Installation
+1. Clone the repo:
+   ```
+   git clone https://github.com/0xkun4l/shadowswap.git
+   cd shadowswap
+   ```
+2. Install dependencies:
+   ```
+   yarn install
+   ```
+3. Set up environment variables (`.env` file):
+   - `INCO_RPC_URL`: Base Sepolia RPC.
+   - `CHAINLINK_FEED`: Oracle contract address.
+   - `PRIVY_APP_ID`: Your Privy app ID.
 
-To develop all apps and packages, run the following command:
+### Deployment
+- **Contracts**: Use Hardhat/Foundry (from Inco tutorials).
+  ```
+  npx hardhat deploy --network baseSepolia
+  ```
+- **Frontend**: Run locally:
+  ```
+  yarn dev
+  ```
+- Test on Base Sepolia explorer for privacy proofs.
 
-```
-cd my-turborepo
+### Usage Example
+1. Connect wallet via Privy.
+2. Encrypt and approve tokens.
+3. Perform a swap: Input hidden, output decrypted only for you.
+4. Add liquidity: Position encrypted—no one sees your stake.
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+## 24-Hour Hackathon Build Roadmap
+- **0-4 Hours**: Fork Inco confidential token tutorial; deploy base cERC-20 pair.
+- **4-10 Hours**: Core AMM—encrypted reserves, constant product swaps.
+- **10-15 Hours**: Liquidity ops + encrypted LP minting.
+- **15-20 Hours**: Integrations (Privy, IncoJS, Chainlink).
+- **20-24 Hours**: Frontend, testing with Inco cheatcodes, demo prep.
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
+## Potential Extensions
+- Private fee distribution to LPs.
+- Encrypted limit orders (price triggers).
+- Multi-pool support or concentrated liquidity (V3-inspired).
+- Integration with more oracles (e.g., Pyth for faster feeds).
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
+## Deployed Contracts (Base Sepolia)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
+**Network:** Base Sepolia (Chain ID: 84532)
+**RPC URL:** https://sepolia.base.org
 
-### Remote Caching
+| Contract | Address |
+|----------|---------|
+| **ShadowSwapFactory** | `0x71be5234DA70F2e7C64711E3c3352EAd5833ab1E` |
+| **cUSDC** | `0x79a45178ac18Ffa0dd1f66936bd107F22F1a31c2` |
+| **cETH** | `0xf89bcfF7d5F71B3fF78b43755Ae0fAc74BCAA8a9` |
+| **cUSDC/cETH Pair** | `0xF3e41DcE7E7d0125F6a97ae11dFE777da17071DE` |
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+**Fee Setter:** `0x435800000093FCD40000D02d961b80006911f792`
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+## Acknowledgments
+- Inco Network for fhEVM and confidential primitives.
+- Zama for FHESwap inspiration.
+- Circle for Confidential ERC-20 framework.
