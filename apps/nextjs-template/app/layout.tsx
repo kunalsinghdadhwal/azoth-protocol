@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import WalletProvider from "@/wallet/provider";
+import { Providers } from "@/components/providers";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -22,7 +22,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.variable} font-sans antialiased bg-[#0a0a0f] text-gray-100`} suppressHydrationWarning>
-        <WalletProvider>{children}</WalletProvider>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

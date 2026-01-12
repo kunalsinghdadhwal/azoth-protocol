@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Header from "@/components/header";
 import Padder from "@/components/padder";
+
+export const dynamic = "force-dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAccount } from "wagmi";
 import { v4 as uuidv4 } from "uuid";
