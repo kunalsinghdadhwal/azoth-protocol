@@ -118,9 +118,39 @@ export default function AgentPage() {
                 </svg>
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-100 mb-2">{agentInfo?.name}</h1>
-                <p className="text-gray-400">{agentInfo?.description}</p>
+                <h1 className="text-3xl font-bold text-gray-100 mb-2">Azoth DAO AI Advisor</h1>
+                <p className="text-gray-400">
+                  A privacy-preserving DAO proposal AI advisor powered by Nillion. Uses nilAI for secure LLM inference in TEE, nilDB for encrypted data storage, and x402 for pay-per-query payments. All governance conversations are encrypted and processed securely.
+                </p>
               </div>
+            </div>
+
+            {/* Technology Stack Badges */}
+            <div className="flex flex-wrap gap-2 mb-8">
+              <span className="px-3 py-1.5 bg-green-900/30 text-green-300 rounded-lg text-xs border border-green-700/30 flex items-center gap-1.5">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                nilAI TEE
+              </span>
+              <span className="px-3 py-1.5 bg-blue-900/30 text-blue-300 rounded-lg text-xs border border-blue-700/30 flex items-center gap-1.5">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                nilDB Encrypted
+              </span>
+              <span className="px-3 py-1.5 bg-amber-900/30 text-amber-300 rounded-lg text-xs border border-amber-700/30 flex items-center gap-1.5">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" />
+                </svg>
+                x402 Payments
+              </span>
+              <span className="px-3 py-1.5 bg-purple-900/30 text-purple-300 rounded-lg text-xs border border-purple-700/30 flex items-center gap-1.5">
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                ERC-8004
+              </span>
             </div>
 
             {/* Capabilities */}
@@ -213,6 +243,74 @@ export default function AgentPage() {
             <div className="flex items-center justify-between text-sm text-gray-500 mb-8 px-2">
               <span>Agent ID: {agentInfo?.agentId || "Not registered"}</span>
               <span>ERC-8004 Verified</span>
+            </div>
+
+            {/* ERC-8004 Registration Details */}
+            <div className="mb-8 bg-[#12121a] rounded-xl p-6 border border-gray-800/50">
+              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+                ERC-8004 Registration
+              </h3>
+              <div className="space-y-4">
+                {/* Agent ID with 8004scan link */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-1">Agent ID</p>
+                    <p className="text-xl font-bold text-purple-400">7473</p>
+                  </div>
+                  <a
+                    href="https://www.8004scan.io/agents/sepolia/7473"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-purple-900/30 hover:bg-purple-900/50 text-purple-300 rounded-lg text-sm border border-purple-700/30 transition-colors flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    View on 8004scan
+                  </a>
+                </div>
+
+                {/* Owner DID */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Owner DID</p>
+                  <p className="text-gray-300 font-mono text-sm break-all">8bf34e49-63a0-4970-be65-2d2c9f8b21a2</p>
+                </div>
+
+                {/* Agent URI with IPFS link */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Agent URI (IPFS)</p>
+                  <a
+                    href="https://ipfs.io/ipfs/QmaRNabCdRiEp3eakY6nbaYaJ7PourDzt3rvF9mbLMbtdQ"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-purple-400 hover:text-purple-300 font-mono text-sm break-all flex items-center gap-2 transition-colors"
+                  >
+                    ipfs://QmaRNabCdRiEp3eakY6nbaYaJ7PourDzt3rvF9mbLMbtdQ
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+
+                {/* A2A Endpoint */}
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">A2A Endpoint</p>
+                  <a
+                    href={`${AGENT_API_URL}/.well-known/agent-card.json`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 hover:text-blue-300 font-mono text-sm break-all flex items-center gap-2 transition-colors"
+                  >
+                    {AGENT_API_URL}/.well-known/agent-card.json
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
             </div>
 
             {/* CTA Button */}
