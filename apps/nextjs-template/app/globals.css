@@ -210,3 +210,49 @@ body {
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
+
+@keyframes scan-beam {
+  0% { 
+    transform: translateY(-100%);
+  }
+  100% { 
+    transform: translateY(300%);
+  }
+}
+
+@keyframes marquee {
+  0% { 
+    transform: translateX(0);
+  }
+  100% { 
+    transform: translateX(-50%);
+  }
+}
+
+.animate-scan-beam {
+  animation: scan-beam 2s ease-in-out forwards;
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
+.glass-panel {
+  background-color: rgba(8, 8, 8, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 245, 255, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+}
+
+.glass-panel:hover {
+  box-shadow: 0 0 30px rgba(0, 245, 255, 0.15), inset 0 0 0 1px rgba(224, 242, 254, 0.1);
+  border-color: rgba(0, 245, 255, 0.3);
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+}
+
+.text-shadow-silver {
+  text-shadow: 0 0 10px rgba(224, 242, 254, 0.4);
+}
