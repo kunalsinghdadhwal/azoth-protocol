@@ -210,4 +210,16 @@ export class NilDBService {
   getCollectionId(): string {
     return this.collectionId;
   }
+
+  /**
+   * Get all records from the collection (for debugging)
+   */
+  async getAllRecords(): Promise<any[]> {
+    const result = await this.client.findData({
+      collection: this.collectionId,
+      filter: {},
+    });
+
+    return result.data || [];
+  }
 }
