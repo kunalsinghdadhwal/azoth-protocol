@@ -1,4 +1,4 @@
-# Azoth DAO: Confidential DAO with Inco TEE
+# Azoth Protocol: Confidential DAO with Inco TEE
 
 [![Inco Lightning](https://img.shields.io/badge/Inco%20Lightning-TEE-orange)](https://inco.org)
 [![Base Sepolia](https://img.shields.io/badge/Base-Sepolia-blue)](https://base.org)
