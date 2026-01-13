@@ -1,6 +1,6 @@
 # Azoth DAO - Smart Contracts
 
-> 4 Solidity contracts (~2000 lines) implementing confidential governance with Inco's encrypted types
+> 4 Solidity contracts (~2000 lines) implementing confidential governance with Inco's encrypted types using TEE and public key asymmetric encryption
 
 ---
 
@@ -713,7 +713,7 @@ MIT License - see [LICENSE](../../LICENSE) for details
 
 - **Documentation**: See [`README-INCO.md`](README-INCO.md) for Inco integration details
 - **Issues**: Open a GitHub issue
-- **Discord**: Join Azoth Protocol community
+- **Discord**: Join Azoth DAO community
 
 ---
 

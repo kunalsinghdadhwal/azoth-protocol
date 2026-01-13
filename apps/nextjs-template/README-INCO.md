@@ -1,6 +1,6 @@
 # Inco SDK Integration - Frontend
 
-> How we use Inco Lightning Protocol SDK (`@inco/js@0.7.10`) for TEE-based confidential computing
+> How we use Inco Lightning Protocol SDK (`@inco/js@0.7.10`) for TEE-based confidential computing with private state operations using public key asymmetric encryption
 
 ---
 

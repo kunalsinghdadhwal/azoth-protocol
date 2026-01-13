@@ -1,6 +1,6 @@
 # Inco Lightning Protocol - Smart Contract Integration
 
-> How we use Inco's encrypted types (`euint256`, `ebool`) in 4 Solidity contracts
+> How we use Inco's encrypted types (`euint256`, `ebool`) in 4 Solidity contracts with TEE-based private state operations using public key asymmetric encryption
 
 ---
 
@@ -21,7 +21,7 @@
 - ✅ **180 lines** in CUSDCMarketplace (encrypted balances)
 - ✅ **220 lines** in ConfidentialVault (encrypted shares, δ=3 protection)
 - ✅ **150 lines** in ConfidentialGovernanceToken (encrypted cGOV, non-transferable)
-- ✅ **470 lines** in AzothDAO (encrypted votes, homomorphic tallying)
+- ✅ **470 lines** in AzothDAO (encrypted votes, encrypted tallying in TEE)
 
 **Total Inco Operations**: ~40+ TFHE calls across 4 contracts
 
@@ -41,10 +41,10 @@ contract Example {
 }
 ```
 
-### 2. Homomorphic Operations
+### 2. Encrypted Operations in TEE
 
 ```solidity
-// Addition (encrypted + encrypted = encrypted)
+// Addition (encrypted + encrypted = encrypted, processed in TEE)
 euint256 newBalance = TFHE.add(_balances[user], amount);
 
 // Subtraction
@@ -83,7 +83,7 @@ contract CUSDCMarketplace {
         // Convert plaintext → encrypted
         euint256 encryptedAmount = TFHE.asEuint256(cUSDCAmount);
         
-        // Add to encrypted balance (homomorphic operation!)
+        // Add to encrypted balance (encrypted operation in TEE!)
         _balances[msg.sender] = TFHE.add(_balances[msg.sender], encryptedAmount);
         totalMinted = TFHE.add(totalMinted, encryptedAmount);
         
@@ -100,7 +100,7 @@ contract CUSDCMarketplace {
 
 **Key Points**:
 - All balances stored as `euint256` (encrypted 256-bit integers)
-- `.add()` performs homomorphic addition (result stays encrypted)
+- `.add()` performs encrypted addition in TEE (result stays encrypted)
 - `TFHE.allow()` grants decryption permission via ACL
 
 ---
@@ -146,7 +146,7 @@ contract ConfidentialVault {
 
 **Key Points**:
 - ERC-4626 inspired with δ=3 offset for inflation attack protection
-- All share calculations use homomorphic operations
+- All share calculations use encrypted operations in TEE
 - Result stays encrypted throughout
 
 ---
@@ -175,7 +175,7 @@ function castVote(uint256 proposalId, VoteType support) external payable {
     // Voting power = encrypted cGOV balance
     euint256 votingPower = govToken.balanceOf(msg.sender);
     
-    // Homomorphic addition to encrypted tally
+    // Encrypted addition to encrypted tally in TEE
     if (support == VoteType.For) {
         prop.forVotes = TFHE.add(prop.forVotes, votingPower);
     } else if (support == VoteType.Against) {
@@ -328,12 +328,12 @@ AzothDAO:                   0x5d22F3621dD106Daf7Ea8EA7C93c8dF29f2Ae1e7
             // First time user
             newBalance = encryptedAmount;
         } else {
-            // Add to existing balance (HOMOMORPHIC ADDITION!)
+            // Add to existing balance (encrypted addition in TEE!)
             newBalance = _balances[msg.sender].add(encryptedAmount);
         }
         _balances[msg.sender] = newBalance;
 
-        // Update total supply (HOMOMORPHIC ADDITION!)
+        // Update total supply (encrypted addition in TEE!)
         euint256 newTotalMinted = totalMinted.add(encryptedAmount);
         totalMinted = newTotalMinted;
 
@@ -357,7 +357,7 @@ AzothDAO:                   0x5d22F3621dD106Daf7Ea8EA7C93c8dF29f2Ae1e7
 1. ✅ Use local variables for new encrypted values
 2. ✅ Grant ACL permissions with `.allow()` and `.allowThis()`
 3. ✅ Check for zero handle before operations
-4. ✅ Use homomorphic `.add()` instead of plaintext addition
+4. ✅ Use encrypted `.add()` operations in TEE instead of plaintext addition
 
 ---
 
@@ -424,7 +424,7 @@ contract ConfidentialVault is Ownable {
         euint256 received = cUSDC.vaultTransfer(msg.sender, amount);
 
         // Calculate shares: (amount × totalShares) / totalAssets
-        // This uses homomorphic operations!
+        // This uses encrypted operations in TEE!
         euint256 sharesToIssue = received.mul(_totalShares).div(_totalAssets);
 
         // Update user shares
@@ -509,7 +509,7 @@ contract ConfidentialVault is Ownable {
 
 **Advanced Patterns:**
 1. ✅ Virtual offsets for inflation protection
-2. ✅ Homomorphic arithmetic (mul, div, add, sub)
+2. ✅ Encrypted arithmetic in TEE (mul, div, add, sub)
 3. ✅ Encrypted comparisons (ge, gt)
 4. ✅ Boolean optimization for gas savings (`hasShares`)
 5. ✅ Decrypting encrypted booleans for require statements
@@ -630,7 +630,7 @@ contract AzothDAO is Ownable {
             support: support
         });
 
-        // Update vote tallies (HOMOMORPHIC ADDITION!)
+        // Update vote tallies (encrypted addition in TEE!)
         if (support == VoteType.For) {
             euint256 newForVotes = proposal.forVotes.add(votingPower);
             proposal.forVotes = newForVotes;
@@ -692,7 +692,7 @@ contract AzothDAO is Ownable {
 **Voting Privacy Patterns:**
 1. ✅ Encrypted vote weights (`euint256 votingPower`)
 2. ✅ Encrypted vote tallies (`forVotes`, `againstVotes`)
-3. ✅ Homomorphic vote accumulation (`.add()`)
+3. ✅ Encrypted vote accumulation in TEE (`.add()`)
 4. ✅ Off-chain decryption with attestations
 5. ✅ Reveal results only after voting ends
 

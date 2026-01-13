@@ -4,8 +4,8 @@ import { SessionKeyProvider } from "@/utils/uno/sessionContext";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Confidential UNO | Azoth Protocol",
-  description: "Play UNO with encrypted cards on the blockchain using Inco fhEVM",
+  title: "Confidential UNO | Azoth DAO",
+  description: "Play UNO with encrypted cards on the blockchain using Inco TEE with public key asymmetric encryption",
 };
 
 export default function UnoPage() {

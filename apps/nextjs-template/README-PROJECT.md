@@ -1,10 +1,10 @@
-# Azoth Protocol - Frontend
+# Azoth DAO - Frontend
 
 [![Next.js](https://img.shields.io/badge/Next.js-16.1-black)](https://nextjs.org/)
 [![Inco SDK](https://img.shields.io/badge/Inco%20SDK-0.7.10-green)](https://docs.inco.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)](https://www.typescriptlang.org/)
 
-> Privacy-first DAO interface with Inco SDK integration for encrypted governance
+> Privacy-first DAO interface with Inco SDK integration for encrypted governance using TEE and public key asymmetric encryption
 
 ---
 

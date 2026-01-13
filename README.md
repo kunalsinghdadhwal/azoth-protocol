@@ -1,11 +1,11 @@
-# Azoth Protocol: Confidential DAO with Inco TEE
+# Azoth DAO: Confidential DAO with Inco TEE
 
 [![Inco Lightning](https://img.shields.io/badge/Inco%20Lightning-TEE-orange)](https://inco.org)
 [![Base Sepolia](https://img.shields.io/badge/Base-Sepolia-blue)](https://base.org)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.30-blue)](https://soliditylang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-16.1-black)](https://nextjs.org/)
 
-> Privacy-first DAO with encrypted voting, confidential balances, and zero-signature UX using Inco's Trusted Execution Environment
+> Privacy-first DAO with encrypted voting, confidential balances, and zero-signature UX using Inco's Trusted Execution Environment with public key asymmetric encryption
 
 ---
 
@@ -25,7 +25,7 @@ A complete confidential governance system where:
 
 ### **Smart Contracts (Solidity + Inco Integration)**
 - **[General Overview](apps/inco-lite-template/README-PROJECT.md)** - Contract architecture, deployment, testing
-- **[Inco Smart Contract Guide](apps/inco-lite-template/README-INCO.md)** - How we use `euint256`, `ebool`, homomorphic ops, ACL
+- **[Inco Smart Contract Guide](apps/inco-lite-template/README-INCO.md)** - How we use `euint256`, `ebool`, encrypted operations in TEE, ACL
 
 ### **Frontend (Next.js + Inco SDK)**
 - **[General Overview](apps/nextjs-template/README-PROJECT.md)** - Frontend architecture, components, wallet integration
@@ -53,13 +53,13 @@ euint256 public requestedAmount;                 // Hidden proposal amounts
 ```
 All sensitive data stored using Inco's encrypted types.
 
-### 2. Homomorphic Operations
+### 2. Encrypted Operations in TEE
 ```solidity
-euint256 newBalance = oldBalance.add(amount);    // Addition on encrypted values
+euint256 newBalance = oldBalance.add(amount);    // Addition on encrypted values in TEE
 ebool hasVoted = votes.gt(threshold);            // Comparison without decryption
 euint256 total = vote1.add(vote2).add(vote3);    // Accumulation stays encrypted
 ```
-Perform calculations without revealing values.
+Perform calculations on encrypted values within the Trusted Execution Environment using public key asymmetric encryption.
 
 ### 3. Session Key Pattern (Zero-Signature UX)
 ```typescript
@@ -82,7 +82,7 @@ const [balance, votes, shares] = await decryptWithVoucher({ handles, voucher });
 
 ### **Smart Contracts (Solidity + Inco Integration)**
 - **[General Overview](apps/inco-lite-template/README-PROJECT.md)** - Contract architecture, deployment, testing
-- **[Inco Smart Contract Guide](apps/inco-lite-template/README-INCO.md)** - How we use `euint256`, `ebool`, homomorphic ops, ACL
+- **[Inco Smart Contract Guide](apps/inco-lite-template/README-INCO.md)** - How we use `euint256`, `ebool`, encrypted operations in TEE, ACL
 
 ### **Frontend (Next.js + Inco SDK)**
 - **[General Overview](apps/nextjs-template/README-PROJECT.md)** - Frontend architecture, components, wallet integration
@@ -102,11 +102,11 @@ euint256 private _totalAssets;     // 256-bit encrypted integer
 ebool private _hasVotingPower;     // Encrypted boolean
 ```
 
-**2. Homomorphic Operations**
+**2. Encrypted Operations in TEE**
 ```solidity
 using e for euint256;
 
-// Add encrypted values (no decryption needed!)
+// Add encrypted values (processed in TEE!)
 euint256 sum = balance1.add(balance2);
 
 // Compare encrypted values
@@ -130,7 +130,7 @@ function castVote(uint256 proposalId, VoteType support) external {
     // Get encrypted voting power
     euint256 votingPower = cGOV.balanceOf(msg.sender);
     
-    // Add to encrypted tally (homomorphic addition!)
+    // Add to encrypted tally (encrypted operation in TEE!)
     if (support == VoteType.For) {
         euint256 newForVotes = proposal.forVotes.add(votingPower);
         proposal.forVotes = newForVotes;
@@ -225,7 +225,7 @@ await writeContract({
 
 | Contract | Purpose | Key Inco Features |
 |----------|---------|-------------------|
-| **CUSDCMarketplace** | Buy cUSDC with ETH | `euint256` balances, homomorphic `.add()` |
+| **CUSDCMarketplace** | Buy cUSDC with ETH | `euint256` balances, encrypted `.add()` |
 | **ConfidentialVault** | ERC-4626 inspired vault | Encrypted shares, `.mul()`, `.div()` operations |
 | **ConfidentialGovernanceToken** | Soulbound governance token | Non-transferable, encrypted minting |
 | **AzothDAO** | Main governance | Encrypted voting, proposal amounts, tallies |
@@ -251,7 +251,7 @@ function castVote(uint256 proposalId, VoteType support) external payable {
     // Get encrypted voting power (cGOV balance)
     euint256 votingPower = cGOV.balanceOf(msg.sender);
     
-    // Add to encrypted tally (HOMOMORPHIC!)
+    // Add to encrypted tally (encrypted operation in TEE!)
     if (support == VoteType.For) {
         euint256 newForVotes = proposal.forVotes.add(votingPower);
         proposal.forVotes = newForVotes;
@@ -290,7 +290,7 @@ const results = await decryptWithVoucher({
 | Feature | Implementation | Files |
 |---------|---------------|-------|
 | **Encrypted Types** | `euint256`, `ebool` | 4 contracts |
-| **Homomorphic Ops** | `.add()`, `.sub()`, `.mul()`, `.div()`, `.gt()`, `.lt()` | AzothDAO.sol, ConfidentialVault.sol |
+| **Encrypted Operations (TEE)** | `.add()`, `.sub()`, `.mul()`, `.div()`, `.gt()`, `.lt()` | AzothDAO.sol, ConfidentialVault.sol |
 | **ACL Management** | `.allow()`, `.allowThis()` | All contracts |
 | **Client Encryption** | `inco.encrypt()` | utils/inco.ts:69 |
 | **Basic Decryption** | `inco.attestedDecrypt()` | utils/inco.ts:100 |
@@ -476,7 +476,7 @@ azoth-protocol/
 
 ### 📘 Smart Contracts
 1. **[Contract Overview](apps/inco-lite-template/README-PROJECT.md)** - Architecture, deployment, testing, user workflow
-2. **[Inco Smart Contract Guide](apps/inco-lite-template/README-INCO.md)** - `euint256`, homomorphic ops, ACL, code examples
+2. **[Inco Smart Contract Guide](apps/inco-lite-template/README-INCO.md)** - `euint256`, encrypted operations in TEE, ACL, code examples
 
 ### 📙 Frontend
 3. **[Frontend Overview](apps/nextjs-template/README-PROJECT.md)** - Next.js architecture, components, wallet integration
@@ -493,11 +493,12 @@ azoth-protocol/
 - 1 contract using `ebool` for conditional logic
 - All sensitive data encrypted on-chain
 
-✅ **Homomorphic Operations**
+✅ **Encrypted Operations in TEE**
 - `.add()` - Vote accumulation, balance updates
 - `.sub()` - Withdrawals, share burning
 - `.mul()`, `.div()` - Vault share calculations
 - `.gt()`, `.lt()`, `.ge()` - Encrypted comparisons
+- All operations performed within Trusted Execution Environment
 
 ✅ **Access Control Lists (ACL)**
 - `.allowThis()` - Contract self-permission

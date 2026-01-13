@@ -1,6 +1,6 @@
 # **Azoth DAO - Confidential Governance System**
 
-A fully confidential governance system built on Base Sepolia using Inco's FHE (Fully Homomorphic Encryption) technology. Implements a dual-token architecture that separates economic stake from governance power while maintaining complete privacy.
+A fully confidential governance system built on Base Sepolia using Inco's TEE (Trusted Execution Environment) with private state operations through public key asymmetric encryption. Implements a dual-token architecture that separates economic stake from governance power while maintaining complete privacy.
 
 ## 🌟 Key Innovation
 
@@ -36,7 +36,8 @@ This design prevents:
 │  └──────────────────┘         │   • Execution    │     │
 │                                └──────────────────┘     │
 │  ┌────────────────────────────────────────────────┐    │
-│  │         Inco FHE Layer (Privacy)               │    │
+│  │  Inco TEE Layer (Private State Operations)    │    │
+│  │  Public Key Asymmetric Encryption             │    │
 │  └────────────────────────────────────────────────┘    │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -178,7 +179,7 @@ Based on OpenZeppelin's guidance:
 ```
 contracts/
 ├── CUSDCMarketplace.sol      # Economic stake acquisition
-├── ConfidentialVault.sol     # ERC-4626 vault with FHE
+├── ConfidentialVault.sol     # ERC-4626 vault with TEE encryption
 ├── ConfidentialGovernanceToken.sol  # Soulbound governance token
 └── AzothDAO.sol              # Main governance contract
 

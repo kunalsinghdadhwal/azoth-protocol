@@ -22,8 +22,8 @@ const cinzel = Cinzel({
 });
 
 export const metadata: Metadata = {
-  title: "Azoth Protocol Interface | Cyber-Obsidian DAO",
-  description: "Privacy-preserving DAO governance powered by fully homomorphic encryption",
+  title: "Azoth DAO Interface | Cyber-Obsidian DAO",
+  description: "Privacy-preserving DAO governance powered by Inco TEE with public key asymmetric encryption",
 };
 
 export default function RootLayout({
